@@ -119,7 +119,25 @@
     "joinPlatform": "Join the Platform",
     "signUp": "Sign Up",
     "alreadyHaveAccount": "Already have an account?",
-    "dontHaveAccount": "Don't have an account?"
+    "dontHaveAccount": "Don't have an account?",
+    "mfa": {
+      "title": "Two-Factor Authentication",
+      "enterCode": "Enter your MFA code (use 0000 for development):",
+      "enterCodeProduction": "Enter the 6-digit code from your authenticator app:",
+      "enterBackupCode": "Enter one of your backup codes:",
+      "authCode": "Authentication Code",
+      "backupCode": "Backup Code",
+      "useBackupCode": "Use backup code instead",
+      "useAuthCode": "Use authenticator code instead",
+      "backupCodeInfo": "Backup codes can only be used once and should be kept secure.",
+      "authCodeInfo": "The code refreshes every 30 seconds in your authenticator app.",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "cancel": "Cancel",
+      "skipDev": "Skip (Dev)",
+      "invalidCode": "Please enter the verification code",
+      "verificationFailed": "Verification failed"
+    }
   },
   "dashboard": {
     "securityScore": "Security Score",

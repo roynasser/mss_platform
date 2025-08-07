@@ -47,7 +47,8 @@ const setupMfaSchema = Joi.object({
 });
 
 const verifyMfaSchema = Joi.object({
-  code: Joi.string().required(),
+  code: Joi.string().min(4).max(6).required(),
+  pendingSessionId: Joi.string().optional(),
 });
 
 /**
@@ -166,8 +167,9 @@ router.post('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Check if MFA is required
-    if (user.mfa_enabled || sessionResult.requiresMfa) {
+    // Check if MFA is required (always required in development mode)
+    const isDevMode = process.env.NODE_ENV === 'development';
+    if (user.mfa_enabled || sessionResult.requiresMfa || isDevMode) {
       // Store pending MFA session in Redis
       const redis = getRedis();
       const pendingSessionId = `pending_mfa:${user.id}:${Date.now()}`;
@@ -276,10 +278,11 @@ router.post('/mfa/complete', async (req: Request, res: Response) => {
     const mfaCheckResult = await db.query('SELECT mfa_enabled FROM users WHERE id = $1', [userId]);
     const userMfaEnabled = mfaCheckResult.rows[0]?.mfa_enabled || false;
     
-    // If user doesn't have MFA enabled but risk assessment required it, allow bypass with special code
-    if (!userMfaEnabled && code === '000000') {
+    // If user doesn't have MFA enabled but risk assessment required it (or dev mode), allow bypass with special code
+    const isDevMode = process.env.NODE_ENV === 'development';
+    if ((!userMfaEnabled || isDevMode) && code === '0000') {
       // Allow bypass for development/testing
-      console.log('MFA bypass used for user without MFA enabled');
+      console.log('MFA bypass used for development mode or user without MFA enabled');
     } else {
       // Verify MFA code normally
       const mfaResult = await mfaService.verifyMfa(userId, code);

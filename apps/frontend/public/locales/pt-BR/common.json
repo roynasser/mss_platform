@@ -119,7 +119,25 @@
     "joinPlatform": "Entrar na Plataforma",
     "signUp": "Cadastrar",
     "alreadyHaveAccount": "Já tem uma conta?",
-    "dontHaveAccount": "Não tem uma conta?"
+    "dontHaveAccount": "Não tem uma conta?",
+    "mfa": {
+      "title": "Autenticação de Dois Fatores",
+      "enterCode": "Digite seu código MFA (use 0000 para desenvolvimento):",
+      "enterCodeProduction": "Digite o código de 6 dígitos do seu aplicativo autenticador:",
+      "enterBackupCode": "Digite um dos seus códigos de backup:",
+      "authCode": "Código de Autenticação",
+      "backupCode": "Código de Backup",
+      "useBackupCode": "Usar código de backup",
+      "useAuthCode": "Usar código do autenticador",
+      "backupCodeInfo": "Códigos de backup só podem ser usados uma vez e devem ser mantidos seguros.",
+      "authCodeInfo": "O código atualiza a cada 30 segundos no seu aplicativo autenticador.",
+      "verify": "Verificar",
+      "verifying": "Verificando...",
+      "cancel": "Cancelar",
+      "skipDev": "Pular (Dev)",
+      "invalidCode": "Por favor, digite o código de verificação",
+      "verificationFailed": "Falha na verificação"
+    }
   },
   "dashboard": {
     "securityScore": "Pontuação de Segurança",
@@ -559,7 +577,7 @@
     "technicianCustomerAccessMatrix": "Matriz de Acesso Técnico-Cliente",
     "multiTenantAnalyticsDashboard": "Painel de Análises Multi-Inquilino",
     "advancedAnalyticsInfo": "Recursos avançados de análise e relatório para gerenciamento multi-inquilino serão implementados aqui, incluindo padrões de acesso, métricas de uso e relatórios de conformidade.",
-    "multiTenantPortal": "Portal Multi-Inquilino",
+    "multiTenantPortal": "Portal Multi-Tenant",
     "welcomeMessage": "Bem-vindo ao Portal de Gerenciamento Multi-Inquilino, {{name}}! Monitore e gerencie todas as organizações de clientes a partir deste painel centralizado.",
     "phase3Active": "Fase 3 Ativa: Gerenciamento Multi-Inquilino",
     "phase3Description": "Estrutura organizacional completa com isolamento de clientes, atribuições técnico-cliente e capacidades administrativas entre inquilinos.",
