@@ -23,7 +23,7 @@ jobs:
         working-directory: ./apps/frontend
         run: |
           echo "Installing frontend dependencies..."
-          npm ci || npm install
+          npm ci --ignore-scripts || npm install --ignore-scripts
           echo "Running TypeScript check..."
           npm run type-check || echo "TypeScript check failed but continuing"
           echo "Running tests..."
@@ -34,7 +34,7 @@ jobs:
         working-directory: ./apps/api
         run: |
           echo "Installing API dependencies..."
-          npm ci || npm install
+          npm ci --ignore-scripts || npm install --ignore-scripts
           echo "Running TypeScript check..."
           npm run type-check || echo "TypeScript check failed but continuing"
           echo "Running tests..."

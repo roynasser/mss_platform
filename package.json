@@ -39,7 +39,6 @@
     "docker:down": "docker-compose down",
     "docker:clean": "docker-compose down -v --remove-orphans && docker system prune -f",
     "docker:rebuild": "docker-compose build --no-cache",
-    "prepare": "husky install",
     "precommit": "lint-staged",
     "release": "npm run build && npm run test && npm run lint",
     "clean": "npm run clean --workspaces --if-present"
