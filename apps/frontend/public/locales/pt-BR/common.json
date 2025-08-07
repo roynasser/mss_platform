@@ -225,6 +225,7 @@
   },
   "cyberArsenal": {
     "nistFramework": {
+      "govern": "Governar",
       "identify": "Identificar",
       "protect": "Proteger",
       "detect": "Detectar",
