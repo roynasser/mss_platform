@@ -24,7 +24,7 @@
       "afterHoursSurcharge": "Sobretaxa Após Expediente",
       "downtimeAvoided": "Tempo de Inatividade Evitado",
       "totalManualCost": "Custo Manual Total",
-      "mssCost": "Custo MSS",
+      "mssCost": "Custo do Serviço CG-One",
       "youSaved": "Você Economizou"
     }
   },
@@ -92,7 +92,7 @@
     "forgotPassword": "Esqueceu a senha?",
     "createAccount": "Criar conta",
     "welcomeBack": "Bem-vindo de volta",
-    "welcomeMessage": "Bem-vindo à Plataforma de Segurança Cibernética MSS",
+    "welcomeMessage": "Bem-vindo à Plataforma de Segurança CG-One",
     "loginError": "E-mail ou senha inválidos",
     "loginSuccess": "Login realizado com sucesso",
     "logoutSuccess": "Você foi desconectado",
@@ -494,7 +494,7 @@
     "adminPortal": "Portal do Administrador"
   },
   "platform": {
-    "name": "Plataforma MSS"
+    "name": "Plataforma CG-One"
   },
   "admin": {
     "technicians": "Técnicos",

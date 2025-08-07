@@ -24,7 +24,7 @@
       "afterHoursSurcharge": "After Hours Surcharge",
       "downtimeAvoided": "Downtime Avoided",
       "totalManualCost": "Total Manual Cost",
-      "mssCost": "MSS Cost",
+      "mssCost": "CG-One Service Cost",
       "youSaved": "You Saved"
     }
   },
@@ -92,7 +92,7 @@
     "forgotPassword": "Forgot password?",
     "createAccount": "Create account",
     "welcomeBack": "Welcome back",
-    "welcomeMessage": "Welcome to the MSS Cybersecurity Platform",
+    "welcomeMessage": "Welcome to CG-One Security Platform",
     "loginError": "Invalid email or password",
     "loginSuccess": "Login successful",
     "logoutSuccess": "You have been signed out",
@@ -494,7 +494,7 @@
     "adminPortal": "Admin Portal"
   },
   "platform": {
-    "name": "MSS Platform"
+    "name": "CG-One Platform"
   },
   "admin": {
     "technicians": "Technicians",

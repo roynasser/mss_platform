@@ -92,7 +92,8 @@
       "Bash(npm run dev:*)",
       "Bash(cd:*)",
       "Bash(cat:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": []
   }
