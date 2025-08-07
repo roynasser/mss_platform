@@ -1,6 +1,55 @@
 # Claude Configuration
 
+## STARTUP PROTOCOL - MUST EXECUTE EVERY SESSION
+
+### 1. Permission Check (FIRST PRIORITY)
+**ALWAYS check if Claude Code was started with proper permissions:**
+- If NOT started with `--dangerously-skip-permissions`, issue this warning:
+  ```
+  ⚠️ WARNING: Claude Code may not have been started with --dangerously-skip-permissions
+  This could cause file access issues. If you experience permission errors, 
+  please restart Claude Code with:
+  
+  claude --dangerously-skip-permissions
+  ```
+
+### 2. Project Selection (SECOND PRIORITY)
+**ALWAYS ask the user at startup:**
+```
+Welcome! What project are we working on today?
+
+Please specify:
+1. The project name or path
+2. A brief description if this is a new project
+```
+
+### 3. Multi-Agent Detection (THIRD PRIORITY)
+**After project selection, ALWAYS:**
+1. Check for `coordination.txt` or similar coordination files in the project root
+2. If multi-agent setup is detected, list available agents and ask:
+   ```
+   I've detected a multi-agent setup for this project.
+   
+   Available agents:
+   - Claude-A: [Role description from coordination.txt]
+   - Claude-B: [Role description from coordination.txt]
+   - Claude-C: [Role description from coordination.txt]
+   
+   Which agent should I act as for this session?
+   ```
+3. If no coordination file exists, proceed as a single agent
+4. Once agent is selected, follow that agent's specific guidelines from coordination.txt
+
+### 4. Context Loading
+After agent selection:
+- Load the selected agent's context from coordination.txt
+- Review recent work and current phase
+- Announce current role and ready status
+
 ## Development Guidelines
+
+- Check coordination.txt for multi-agent coordination
+- Follow the selected agent's specific role and responsibilities
 
 ### Commit Policy
 - **MANDATORY**: Every agent MUST commit and push changes after making file modifications
