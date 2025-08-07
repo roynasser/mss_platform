@@ -3,9 +3,10 @@
 ## Development Guidelines
 
 ### Commit Policy
-- **MANDATORY**: Every agent MUST commit changes immediately after making any code or documentation modifications
+- **MANDATORY**: Every agent MUST commit and push changes immediately after making ANY file modifications
 - **Commit Format**: Use conventional commit format with short, meaningful messages
-- **Auto-commit**: All file changes should be automatically committed without user prompts
+- **Auto-commit & Push**: All file changes should be automatically committed and pushed without user prompts
+- **No Batching**: Each file change or related set of changes gets its own commit and immediate push
 
 ### Commit Message Format
 ```
@@ -33,11 +34,12 @@ chore(deps): update dependencies
 ### Agent-Specific Guidelines
 
 #### All Agents Must:
-1. Commit immediately after every file modification
+1. Commit AND push immediately after every file modification
 2. Use descriptive but concise commit messages
 3. Include relevant scope when applicable
 4. Follow conventional commit format
 5. Never batch multiple unrelated changes
+6. Execute `git add`, `git commit`, and `git push` as a single workflow after changes
 
 #### Example Workflow:
 ```bash
