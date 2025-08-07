@@ -1,0 +1,288 @@
+# docker-compose.prod.yml for MSS Platform Production
+
+services:
+  # PostgreSQL Database (Production)
+  postgres:
+    image: postgres:15-alpine
+    container_name: mss-postgres-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mss_platform}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./infrastructure/database/backups:/backups
+    networks:
+      - mss-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache (Production)
+  redis:
+    image: redis:7-alpine
+    container_name: mss-redis-prod
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_prod_data:/data
+      - ./infrastructure/docker/redis.prod.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - mss-network
+    restart: always
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Backend API (Production)
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.prod
+    container_name: mss-api-prod
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${FRONTEND_URL}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mss-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Frontend Next.js App (Production)
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+    container_name: mss-frontend-prod
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - mss-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Technician App (Production)
+  technician-app:
+    build:
+      context: ./apps/technician-app
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+    container_name: mss-technician-prod
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+    ports:
+      - "3002:3000"
+    depends_on:
+      - api
+    networks:
+      - mss-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    profiles:
+      - technician
+
+  # NGINX Load Balancer (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: mss-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/docker/nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/docker/ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - mss-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "7"
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mss-prometheus-prod
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - mss-network
+    restart: always
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    profiles:
+      - monitoring
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mss-grafana-prod
+    ports:
+      - "3003:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infrastructure/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+    networks:
+      - mss-network
+    restart: always
+    profiles:
+      - monitoring
+
+  # Log Aggregation - Loki
+  loki:
+    image: grafana/loki:latest
+    container_name: mss-loki-prod
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infrastructure/monitoring/loki.yml:/etc/loki/local-config.yaml
+      - loki_data:/tmp/loki
+    networks:
+      - mss-network
+    restart: always
+    profiles:
+      - monitoring
+
+  # Backup Service
+  backup:
+    build:
+      context: ./infrastructure/backup
+      dockerfile: Dockerfile
+    container_name: mss-backup-prod
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-mss_platform}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      AWS_ACCESS_KEY_ID: ${BACKUP_AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${BACKUP_AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      S3_BUCKET: ${BACKUP_S3_BUCKET}
+    volumes:
+      - ./infrastructure/database/backups:/backups
+    networks:
+      - mss-network
+    restart: unless-stopped
+    profiles:
+      - backup
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+  nginx_logs:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  mss-network:
+    driver: bridge
+    name: mss-prod-network

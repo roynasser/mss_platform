@@ -1,0 +1,1874 @@
+openapi: 3.0.3
+info:
+  title: MSS Platform API
+  description: |
+    MSS Platform API provides comprehensive endpoints for managing cybersecurity services,
+    multi-tenant organizations, user management, and security operations.
+    
+    ## Authentication
+    
+    The API uses JWT Bearer tokens for authentication. Most endpoints require a valid JWT token
+    in the Authorization header:
+    
+    ```
+    Authorization: Bearer <jwt_token>
+    ```
+    
+    ## Multi-Factor Authentication Flow
+    
+    1. **Login**: POST /api/auth/login with credentials
+       - Returns `mfa_token` if MFA is enabled
+       - Returns `access_token` and `refresh_token` if MFA is disabled
+    
+    2. **Complete MFA**: POST /api/auth/mfa/complete with MFA token and TOTP/backup code
+       - Returns `access_token` and `refresh_token`
+    
+    3. **Refresh Token**: POST /api/auth/refresh when access token expires
+    
+    ## Role-Based Access Control
+    
+    ### Customer Organization Roles
+    - **admin**: Full organization management
+    - **report_viewer**: Read access to security reports
+    - **request_user**: Can request interventions
+    - **basic_user**: Limited dashboard access
+    
+    ### MSS Provider Roles
+    - **super_admin**: Platform-wide administration
+    - **account_manager**: Customer organization management
+    - **security_analyst**: Security monitoring and analysis
+    - **technician**: Customer environment access
+    
+    ## Rate Limiting
+    
+    API endpoints are rate-limited to prevent abuse:
+    - Authentication endpoints: 5 requests per minute per IP
+    - General endpoints: 100 requests per minute per user
+    - Bulk operations: 10 requests per minute per user
+    
+  version: 1.0.0
+  contact:
+    name: MSS Platform API Support
+    email: api-support@mss-platform.com
+  license:
+    name: ISC License
+    url: https://opensource.org/licenses/ISC
+
+servers:
+  - url: http://localhost:8000/api
+    description: Development server
+  - url: https://api.mss-platform.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token obtained from login/MFA completion
+
+  schemas:
+    # Common schemas
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful
+        message:
+          type: string
+          description: Human-readable message
+        error:
+          type: string
+          description: Error message if success is false
+      required:
+        - success
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Items per page
+        totalPages:
+          type: integer
+          description: Total number of pages
+      required:
+        - total
+        - page
+        - limit
+        - totalPages
+
+    # Authentication schemas
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: securePassword123
+        rememberMe:
+          type: boolean
+          default: false
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  description: JWT access token (only if MFA disabled)
+                refreshToken:
+                  type: string
+                  description: JWT refresh token (only if MFA disabled)
+                mfaToken:
+                  type: string
+                  description: MFA token for completing authentication (only if MFA enabled)
+                mfaRequired:
+                  type: boolean
+                  description: Whether MFA is required
+                user:
+                  $ref: '#/components/schemas/User'
+
+    MfaCompleteRequest:
+      type: object
+      properties:
+        mfaToken:
+          type: string
+          description: MFA token from login response
+        code:
+          type: string
+          description: TOTP code or backup code
+          pattern: '^[0-9]{6}$|^[A-Z0-9]{8}$'
+        rememberDevice:
+          type: boolean
+          default: false
+      required:
+        - mfaToken
+        - code
+
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          description: JWT refresh token
+      required:
+        - refreshToken
+
+    # User schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        emailVerified:
+          type: boolean
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [admin, report_viewer, request_user, basic_user, super_admin, technician, security_analyst, account_manager]
+        status:
+          type: string
+          enum: [active, suspended, locked, deleted]
+        mfaEnabled:
+          type: boolean
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastLoginIp:
+          type: string
+          nullable: true
+        failedLoginAttempts:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        organization:
+          $ref: '#/components/schemas/Organization'
+      required:
+        - id
+        - email
+        - firstName
+        - lastName
+        - role
+        - status
+        - mfaEnabled
+        - createdAt
+        - updatedAt
+
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+          minLength: 1
+        lastName:
+          type: string
+          minLength: 1
+        role:
+          type: string
+          enum: [admin, report_viewer, request_user, basic_user, technician, security_analyst, account_manager]
+        orgId:
+          type: string
+          format: uuid
+          description: Target organization ID (optional - defaults to current user's organization)
+        password:
+          type: string
+          minLength: 8
+          description: Optional password (if not provided, user will receive invitation email)
+        sendInvitation:
+          type: boolean
+          default: true
+          description: Whether to send invitation email
+      required:
+        - email
+        - firstName
+        - lastName
+        - role
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+        lastName:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          description: Email updates require MSS provider role
+        role:
+          type: string
+          enum: [admin, report_viewer, request_user, basic_user, technician, security_analyst, account_manager]
+          description: Cannot change own role
+        status:
+          type: string
+          enum: [active, suspended, locked]
+          description: Status updates require admin privileges
+
+    # Organization schemas
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [customer, mss_provider]
+        domain:
+          type: string
+          format: hostname
+          nullable: true
+        ssoEnabled:
+          type: boolean
+        status:
+          type: string
+          enum: [active, suspended, deleted]
+        settings:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - type
+        - ssoEnabled
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateOrganizationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum: [customer, mss_provider]
+        domain:
+          type: string
+          format: hostname
+        adminUser:
+          type: object
+          properties:
+            email:
+              type: string
+              format: email
+            firstName:
+              type: string
+            lastName:
+              type: string
+            password:
+              type: string
+              minLength: 8
+          required:
+            - email
+            - firstName
+            - lastName
+        settings:
+          type: object
+          additionalProperties: true
+      required:
+        - name
+        - type
+        - adminUser
+
+    # Security Alert schemas
+    SecurityAlert:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [open, acknowledged, investigating, resolved, false_positive]
+        category:
+          type: string
+          enum: [malware, phishing, intrusion, policy_violation, system_anomaly]
+        source:
+          type: string
+          description: Alert source system/tool
+        affectedAssets:
+          type: array
+          items:
+            type: string
+        organizationId:
+          type: string
+          format: uuid
+        assignedTo:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - id
+        - title
+        - description
+        - severity
+        - status
+        - category
+        - organizationId
+        - createdAt
+        - updatedAt
+
+    UpdateAlertRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [acknowledged, investigating, resolved, false_positive]
+        assignedTo:
+          type: string
+          format: uuid
+          nullable: true
+        notes:
+          type: string
+          description: Resolution notes or comments
+      required:
+        - status
+
+    # Security Report schemas
+    SecurityReport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        type:
+          type: string
+          enum: [vulnerability_assessment, penetration_test, compliance_audit, incident_response, monthly_summary]
+        status:
+          type: string
+          enum: [draft, pending_review, approved, published]
+        organizationId:
+          type: string
+          format: uuid
+        generatedBy:
+          type: string
+          format: uuid
+        approvedBy:
+          type: string
+          format: uuid
+          nullable: true
+        summary:
+          type: string
+          description: Executive summary
+        findings:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              severity:
+                type: string
+                enum: [low, medium, high, critical]
+              description:
+                type: string
+              recommendation:
+                type: string
+              status:
+                type: string
+                enum: [open, in_progress, resolved]
+        reportPeriod:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date
+            endDate:
+              type: string
+              format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - title
+        - type
+        - status
+        - organizationId
+        - generatedBy
+        - createdAt
+        - updatedAt
+
+    # Intervention schemas
+    Intervention:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [requested, assigned, in_progress, completed, cancelled]
+        type:
+          type: string
+          enum: [incident_response, vulnerability_remediation, security_assessment, consultation, emergency_support]
+        requestedBy:
+          type: string
+          format: uuid
+        assignedTo:
+          type: string
+          format: uuid
+          nullable: true
+        organizationId:
+          type: string
+          format: uuid
+        estimatedHours:
+          type: number
+          format: float
+          nullable: true
+        actualHours:
+          type: number
+          format: float
+          nullable: true
+        scheduledFor:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        workLog:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              technicianId:
+                type: string
+                format: uuid
+              action:
+                type: string
+              notes:
+                type: string
+              hoursSpent:
+                type: number
+                format: float
+      required:
+        - id
+        - title
+        - description
+        - priority
+        - status
+        - type
+        - requestedBy
+        - organizationId
+        - createdAt
+        - updatedAt
+
+    CreateInterventionRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        type:
+          type: string
+          enum: [incident_response, vulnerability_remediation, security_assessment, consultation, emergency_support]
+        scheduledFor:
+          type: string
+          format: date-time
+          description: Preferred time for intervention
+        estimatedHours:
+          type: number
+          format: float
+          minimum: 0.5
+          maximum: 40
+      required:
+        - title
+        - description
+        - priority
+        - type
+
+    UpdateInterventionRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [assigned, in_progress, completed, cancelled]
+        assignedTo:
+          type: string
+          format: uuid
+          nullable: true
+        estimatedHours:
+          type: number
+          format: float
+        scheduledFor:
+          type: string
+          format: date-time
+        workLogEntry:
+          type: object
+          properties:
+            action:
+              type: string
+            notes:
+              type: string
+            hoursSpent:
+              type: number
+              format: float
+          required:
+            - action
+            - notes
+
+    # Error schemas
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            success:
+              type: boolean
+              example: false
+            error:
+              type: string
+              description: Error message
+            code:
+              type: string
+              description: Error code for programmatic handling
+              example: VALIDATION_ERROR
+            details:
+              type: object
+              additionalProperties: true
+              description: Additional error details
+          required:
+            - success
+            - error
+
+  responses:
+    Unauthorized:
+      description: Authentication required or token invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Authentication required"
+            code: "UNAUTHORIZED"
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Insufficient permissions"
+            code: "FORBIDDEN"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Resource not found"
+            code: "NOT_FOUND"
+
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Validation failed"
+            code: "VALIDATION_ERROR"
+            details:
+              email: "Invalid email format"
+              password: "Password must be at least 8 characters"
+
+    RateLimit:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Rate limit exceeded"
+            code: "RATE_LIMIT_EXCEEDED"
+
+paths:
+  # Authentication endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: |
+        Authenticate user with email and password.
+        - If MFA is disabled: Returns access and refresh tokens
+        - If MFA is enabled: Returns MFA token for completing authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: "Invalid email or password"
+                code: "INVALID_CREDENTIALS"
+        '423':
+          description: Account locked due to failed attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: "Account locked due to failed login attempts"
+                code: "ACCOUNT_LOCKED"
+        '429':
+          $ref: '#/components/responses/RateLimit'
+
+  /auth/mfa/complete:
+    post:
+      tags:
+        - Authentication
+      summary: Complete MFA authentication
+      description: Complete multi-factor authentication with TOTP code or backup code
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaCompleteRequest'
+      responses:
+        '200':
+          description: MFA completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          accessToken:
+                            type: string
+                          refreshToken:
+                            type: string
+                          user:
+                            $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          description: Invalid MFA token or code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get new access token using refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          accessToken:
+                            type: string
+                          refreshToken:
+                            type: string
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: Invalidate current session and tokens
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Logged out successfully"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/mfa/setup:
+    post:
+      tags:
+        - Authentication
+      summary: Setup MFA for current user
+      description: Generate TOTP secret and QR code for MFA setup
+      responses:
+        '200':
+          description: MFA setup initiated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          secret:
+                            type: string
+                            description: TOTP secret
+                          qrCodeUrl:
+                            type: string
+                            description: Data URL for QR code image
+                          backupCodes:
+                            type: array
+                            items:
+                              type: string
+                            description: One-time backup codes
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: MFA already enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # User management endpoints
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: |
+        Get list of users with organization-based access control:
+        - Customer admins: See only users in their organization
+        - MSS provider users: See customer users or their own org users
+        - Super admins: See all users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: orgId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by organization ID
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, report_viewer, request_user, basic_user, super_admin, technician, security_analyst, account_manager]
+          description: Filter by role
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended, locked]
+          description: Filter by status (excludes deleted users)
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search in first name, last name, or email
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          users:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/User'
+                          total:
+                            type: integer
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          totalPages:
+                            type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - Users
+      summary: Create new user
+      description: |
+        Create a new user in the organization.
+        Authorization:
+        - Customer admins: Create users in their own organization only
+        - MSS account managers/super admins: Create users in any organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+                      message:
+                        type: string
+                        example: "User created and invitation sent"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User with email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      description: Get the profile information of the currently authenticated user
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: |
+        Get specific user information.
+        Authorization:
+        - Users can view their own profile
+        - Customer admins can view users in their organization
+        - MSS managers can view customer users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Users
+      summary: Update user
+      description: |
+        Update user information.
+        Authorization:
+        - Users can update their own basic info (not role/status)
+        - Customer admins can update users in their organization
+        - MSS managers can update customer users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          email:
+                            type: string
+                          firstName:
+                            type: string
+                          lastName:
+                            type: string
+                          role:
+                            type: string
+                          status:
+                            type: string
+                          updatedAt:
+                            type: string
+                            format: date-time
+                      message:
+                        type: string
+                        example: "User updated successfully"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      description: |
+        Soft delete user (marks as deleted and revokes sessions).
+        Authorization:
+        - Customer admins can delete users in their organization (except themselves)
+        - MSS super admins can delete any user (except themselves)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "User deleted successfully"
+        '400':
+          description: Cannot delete own account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Organization management endpoints
+  /organizations:
+    get:
+      tags:
+        - Organizations
+      summary: List organizations
+      description: |
+        Get list of organizations based on user permissions:
+        - Customer users: See only their own organization
+        - MSS provider users: See customer organizations and their own
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [customer, mss_provider]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended]
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search in organization name or domain
+      responses:
+        '200':
+          description: Organizations retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          organizations:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Organization'
+                          total:
+                            type: integer
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          totalPages:
+                            type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Organizations
+      summary: Create new organization
+      description: |
+        Create a new organization with admin user.
+        Only super admins can create organizations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationRequest'
+      responses:
+        '201':
+          description: Organization created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          organization:
+                            $ref: '#/components/schemas/Organization'
+                          adminUser:
+                            $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Organization with domain already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /organizations/{orgId}:
+    get:
+      tags:
+        - Organizations
+      summary: Get organization by ID
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Organization retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Security Alerts endpoints
+  /alerts:
+    get:
+      tags:
+        - Security Alerts
+      summary: Get security alerts
+      description: |
+        Get security alerts based on user permissions:
+        - Customer users: See alerts for their organization only
+        - MSS provider users: See alerts for all customer organizations
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, acknowledged, investigating, resolved, false_positive]
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [malware, phishing, intrusion, policy_violation, system_anomaly]
+        - name: orgId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by organization (MSS users only)
+        - name: assignedTo
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Alerts retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          alerts:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/SecurityAlert'
+                          total:
+                            type: integer
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          totalPages:
+                            type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /alerts/{alertId}:
+    get:
+      tags:
+        - Security Alerts
+      summary: Get alert by ID
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Alert retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SecurityAlert'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Security Alerts
+      summary: Update alert
+      description: |
+        Update alert status and assignment.
+        Only MSS technicians and security analysts can update alerts.
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAlertRequest'
+      responses:
+        '200':
+          description: Alert updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SecurityAlert'
+                      message:
+                        type: string
+                        example: "Alert updated successfully"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Security Reports endpoints
+  /reports:
+    get:
+      tags:
+        - Security Reports
+      summary: Get security reports
+      description: |
+        Get security reports based on user permissions:
+        - Customer users: See reports for their organization
+        - MSS provider users: See reports for all customer organizations
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [vulnerability_assessment, penetration_test, compliance_audit, incident_response, monthly_summary]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_review, approved, published]
+        - name: orgId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          reports:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/SecurityReport'
+                          total:
+                            type: integer
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          totalPages:
+                            type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /reports/{reportId}:
+    get:
+      tags:
+        - Security Reports
+      summary: Get report by ID
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Report retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SecurityReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reports/{reportId}/download:
+    get:
+      tags:
+        - Security Reports
+      summary: Download report file
+      description: Download the report as PDF file
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Report file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Intervention endpoints
+  /interventions:
+    get:
+      tags:
+        - Interventions
+      summary: Get interventions
+      description: |
+        Get intervention requests based on user permissions:
+        - Customer users: See interventions for their organization
+        - MSS technicians: See assigned interventions
+        - MSS managers: See all interventions
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [requested, assigned, in_progress, completed, cancelled]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [incident_response, vulnerability_remediation, security_assessment, consultation, emergency_support]
+        - name: assignedTo
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: orgId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Interventions retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          interventions:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Intervention'
+                          total:
+                            type: integer
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          totalPages:
+                            type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Interventions
+      summary: Create intervention request
+      description: |
+        Request a new security intervention.
+        Available to customer users with request_user role or higher.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInterventionRequest'
+      responses:
+        '201':
+          description: Intervention created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Intervention'
+                      message:
+                        type: string
+                        example: "Intervention request created successfully"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /interventions/{interventionId}:
+    get:
+      tags:
+        - Interventions
+      summary: Get intervention by ID
+      parameters:
+        - name: interventionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Intervention retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Intervention'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Interventions
+      summary: Update intervention
+      description: |
+        Update intervention status, assignment, or add work log entries.
+        Available to assigned technicians and MSS managers.
+      parameters:
+        - name: interventionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInterventionRequest'
+      responses:
+        '200':
+          description: Intervention updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Intervention'
+                      message:
+                        type: string
+                        example: "Intervention updated successfully"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User management and profile operations
+  - name: Organizations
+    description: Multi-tenant organization management
+  - name: Security Alerts
+    description: Security alert monitoring and management
+  - name: Security Reports
+    description: Security report generation and access
+  - name: Interventions
+    description: Security intervention request and tracking

@@ -1,0 +1,29 @@
+{
+  "name": "@mss-platform/auth",
+  "version": "1.0.0",
+  "description": "Shared authentication utilities for MSS Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "jwt-decode": "^4.0.0",
+    "@mss-platform/types": "file:../types"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/bcryptjs": "^2.4.6"
+  },
+  "files": [
+    "dist"
+  ]
+}

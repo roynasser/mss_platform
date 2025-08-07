@@ -1,0 +1,21 @@
+{
+  "name": "@mss-platform/types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript type definitions for MSS Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3"
+  },
+  "files": [
+    "dist"
+  ]
+}

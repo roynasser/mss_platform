@@ -1,0 +1,169 @@
+# docker-compose.dev.yml for MSS Platform Monorepo Development
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: mss-postgres-dev
+    environment:
+      POSTGRES_DB: mss_platform_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./infrastructure/database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - mss-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: mss-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - mss-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Backend API
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    container_name: mss-api-dev
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/mss_platform_dev
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/api:/app
+      - ./packages:/packages
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mss-network
+    command: npm run dev
+    restart: unless-stopped
+
+  # Frontend Next.js App
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.dev
+    container_name: mss-frontend-dev
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+      NEXT_PUBLIC_WS_URL: ws://localhost:3001
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/frontend:/app
+      - ./packages:/packages
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    networks:
+      - mss-network
+    command: npm run dev
+    restart: unless-stopped
+
+  # Technician App (Future)
+  technician-app:
+    build:
+      context: ./apps/technician-app
+      dockerfile: Dockerfile.dev
+    container_name: mss-technician-dev
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+      NEXT_PUBLIC_WS_URL: ws://localhost:3001
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./apps/technician-app:/app
+      - ./packages:/packages
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    networks:
+      - mss-network
+    command: npm run dev
+    profiles:
+      - technician
+    restart: unless-stopped
+
+  # NGINX Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: mss-nginx-dev
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/docker/nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/docker/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - mss-network
+    restart: unless-stopped
+
+  # Development Tools
+  adminer:
+    image: adminer:latest
+    container_name: mss-adminer-dev
+    ports:
+      - "8080:8080"
+    networks:
+      - mss-network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    profiles:
+      - tools
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: mss-redis-commander-dev
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    networks:
+      - mss-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+
+networks:
+  mss-network:
+    driver: bridge
+    name: mss-dev-network

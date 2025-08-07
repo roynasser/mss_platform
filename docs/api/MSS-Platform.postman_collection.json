@@ -1,0 +1,814 @@
+{
+  "info": {
+    "name": "MSS Platform API",
+    "description": "Comprehensive API collection for the MSS Platform - Multi-tenant cybersecurity management system",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api",
+      "description": "Base API URL"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "description": "JWT access token"
+    },
+    {
+      "key": "refreshToken", 
+      "value": "",
+      "description": "JWT refresh token"
+    },
+    {
+      "key": "mfaToken",
+      "value": "",
+      "description": "MFA token for completing authentication"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "description": "Current user ID"
+    },
+    {
+      "key": "orgId",
+      "value": "",
+      "description": "Current organization ID"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and session management endpoints",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@acme.com\",\n  \"password\": \"SecurePass123!\",\n  \"rememberMe\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticate user with email and password. Returns access/refresh tokens or MFA token if MFA is enabled."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(200)) {",
+                  "  const response = pm.response.json();",
+                  "  if (response.success && response.data.accessToken) {",
+                  "    pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    pm.collectionVariables.set('userId', response.data.user.id);",
+                  "    pm.collectionVariables.set('orgId', response.data.user.organization.id);",
+                  "  } else if (response.success && response.data.mfaToken) {",
+                  "    pm.collectionVariables.set('mfaToken', response.data.mfaToken);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete MFA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mfaToken\": \"{{mfaToken}}\",\n  \"code\": \"123456\",\n  \"rememberDevice\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/mfa/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "mfa", "complete"]
+            },
+            "description": "Complete multi-factor authentication with TOTP code or backup code."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(200)) {",
+                  "  const response = pm.response.json();",
+                  "  if (response.success) {",
+                  "    pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    pm.collectionVariables.set('userId', response.data.user.id);",
+                  "    pm.collectionVariables.set('orgId', response.data.user.organization.id);",
+                  "    pm.collectionVariables.unset('mfaToken');",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Get new access token using refresh token."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(200)) {",
+                  "  const response = pm.response.json();",
+                  "  if (response.success) {",
+                  "    pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logout user and invalidate current session."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(200)) {",
+                  "  pm.collectionVariables.unset('accessToken');",
+                  "  pm.collectionVariables.unset('refreshToken');",
+                  "  pm.collectionVariables.unset('userId');",
+                  "  pm.collectionVariables.unset('orgId');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Setup MFA",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mfa/setup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "mfa", "setup"]
+            },
+            "description": "Setup MFA for current user - generates TOTP secret and QR code."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints",
+      "item": [
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            },
+            "description": "Get the profile information of the currently authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "orgId",
+                  "value": "",
+                  "description": "Filter by organization ID",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "",
+                  "description": "Filter by role",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search in name or email",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get list of users with organization-based access control."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"role\": \"basic_user\",\n  \"password\": \"SecurePass123!\",\n  \"sendInvitation\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Create a new user in the organization."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Get specific user information by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe Updated\",\n  \"role\": \"report_viewer\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Update user information."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Soft delete user (marks as deleted and revokes sessions)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "description": "Organization management endpoints",
+      "item": [
+        {
+          "name": "List Organizations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/organizations?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["organizations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "customer or mss_provider",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "active, suspended",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search in name or domain",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get list of organizations based on user permissions."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Customer Corp\",\n  \"type\": \"customer\",\n  \"domain\": \"newcustomer.com\",\n  \"adminUser\": {\n    \"email\": \"admin@newcustomer.com\",\n    \"firstName\": \"Admin\",\n    \"lastName\": \"User\",\n    \"password\": \"SecurePass123!\"\n  },\n  \"settings\": {}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/organizations",
+              "host": ["{{baseUrl}}"],
+              "path": ["organizations"]
+            },
+            "description": "Create a new organization with admin user. Only super admins can create organizations."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Organization by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/organizations/{{orgId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["organizations", "{{orgId}}"]
+            },
+            "description": "Get organization details by ID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Security Alerts",
+      "description": "Security alert management endpoints",
+      "item": [
+        {
+          "name": "List Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/alerts?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["alerts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "severity",
+                  "value": "",
+                  "description": "low, medium, high, critical",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "open, acknowledged, investigating, resolved, false_positive",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "description": "malware, phishing, intrusion, policy_violation, system_anomaly",
+                  "disabled": true
+                },
+                {
+                  "key": "assignedTo",
+                  "value": "",
+                  "description": "User ID",
+                  "disabled": true
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "",
+                  "description": "YYYY-MM-DD",
+                  "disabled": true
+                },
+                {
+                  "key": "dateTo",
+                  "value": "",
+                  "description": "YYYY-MM-DD",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get security alerts based on user permissions."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Alert by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{alertId}",
+              "host": ["{{baseUrl}}"],
+              "path": ["alerts", "{alertId}"]
+            },
+            "description": "Get specific alert by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Alert",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"acknowledged\",\n  \"assignedTo\": \"{{userId}}\",\n  \"notes\": \"Alert acknowledged and under investigation.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{alertId}",
+              "host": ["{{baseUrl}}"],
+              "path": ["alerts", "{alertId}"]
+            },
+            "description": "Update alert status and assignment. Only MSS technicians and security analysts can update alerts."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Security Reports",
+      "description": "Security report management endpoints",
+      "item": [
+        {
+          "name": "List Reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "vulnerability_assessment, penetration_test, compliance_audit, incident_response, monthly_summary",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "draft, pending_review, approved, published",
+                  "disabled": true
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "",
+                  "description": "YYYY-MM-DD",
+                  "disabled": true
+                },
+                {
+                  "key": "dateTo",
+                  "value": "",
+                  "description": "YYYY-MM-DD",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get security reports based on user permissions."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Report by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/{reportId}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "{reportId}"]
+            },
+            "description": "Get specific report by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Download Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/{reportId}/download",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "{reportId}", "download"]
+            },
+            "description": "Download the report as PDF file."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Interventions",
+      "description": "Security intervention management endpoints",
+      "item": [
+        {
+          "name": "List Interventions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/interventions?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["interventions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "requested, assigned, in_progress, completed, cancelled",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "",
+                  "description": "low, medium, high, urgent",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "incident_response, vulnerability_remediation, security_assessment, consultation, emergency_support",
+                  "disabled": true
+                },
+                {
+                  "key": "assignedTo",
+                  "value": "",
+                  "description": "User ID",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get intervention requests based on user permissions."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Intervention",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Security Incident Response Required\",\n  \"description\": \"We detected suspicious activity on our network that requires immediate attention from a security expert.\",\n  \"priority\": \"high\",\n  \"type\": \"incident_response\",\n  \"scheduledFor\": \"2024-08-07T14:00:00Z\",\n  \"estimatedHours\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/interventions",
+              "host": ["{{baseUrl}}"],
+              "path": ["interventions"]
+            },
+            "description": "Request a new security intervention. Available to customer users with request_user role or higher."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Intervention by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/interventions/{interventionId}",
+              "host": ["{{baseUrl}}"],
+              "path": ["interventions", "{interventionId}"]
+            },
+            "description": "Get specific intervention by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Intervention",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"assignedTo\": \"{{userId}}\",\n  \"workLogEntry\": {\n    \"action\": \"Initial investigation started\",\n    \"notes\": \"Began analysis of network logs and identified potential attack vectors.\",\n    \"hoursSpent\": 1.5\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/interventions/{interventionId}",
+              "host": ["{{baseUrl}}"],
+              "path": ["interventions", "{interventionId}"]
+            },
+            "description": "Update intervention status, assignment, or add work log entries. Available to assigned technicians and MSS managers."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Checks",
+      "description": "System health and status endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../health",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "health"]
+            },
+            "description": "Check system health including database, Redis, and external services."
+          },
+          "response": []
+        },
+        {
+          "name": "Readiness Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../ready",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "ready"]
+            },
+            "description": "Check if system is ready to serve requests."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-refresh token if expired",
+          "const accessToken = pm.collectionVariables.get('accessToken');",
+          "if (accessToken) {",
+          "  try {",
+          "    const tokenData = JSON.parse(atob(accessToken.split('.')[1]));",
+          "    const now = Math.floor(Date.now() / 1000);",
+          "    if (tokenData.exp && tokenData.exp < now + 60) {",
+          "      console.log('Token expires soon, should refresh');",
+          "    }",
+          "  } catch (e) {",
+          "    console.log('Could not parse token');",
+          "  }",
+          "}"
+        ]
+      }
+    }
+  ]
+}

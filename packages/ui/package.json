@@ -1,0 +1,40 @@
+{
+  "name": "@mss-platform/ui",
+  "version": "1.0.0",
+  "description": "Shared UI components for MSS Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.{ts,tsx}",
+    "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
+    "type-check": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@mui/material": "^5.15.20",
+    "@mui/icons-material": "^5.15.20",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mss-platform/types": "file:../types"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@storybook/react": "^7.6.17",
+    "@storybook/addon-essentials": "^7.6.17"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "files": [
+    "dist"
+  ]
+}

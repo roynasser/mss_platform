@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+*.tsbuildinfo
+
+# Coverage reports
+coverage/
+
+# Logs
+*.log
+
+# Environment files
+.env*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated files
+*.min.js
+*.min.css
+
+# Old directories
+frontend-old/
+backend-old/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
+# Infrastructure
+*.tf
+*.tfvars
+
+# Database
+*.sql
+*.db
+*.sqlite

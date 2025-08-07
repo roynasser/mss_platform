@@ -1,0 +1,97 @@
+# docker-compose.yml for MSS Platform Development
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: mss-postgres
+    environment:
+      POSTGRES_DB: mss_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/database:/docker-entrypoint-initdb.d
+    networks:
+      - mss-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: mss-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mss-network
+
+  # Backend API
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    container_name: mss-api
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/mss_platform
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - mss-network
+    command: npm run dev
+
+  # Frontend Next.js App
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.dev
+    container_name: mss-frontend
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    networks:
+      - mss-network
+    command: npm run dev
+
+  # NGINX Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: mss-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./infrastructure/docker/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - mss-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  mss-network:
+    driver: bridge
