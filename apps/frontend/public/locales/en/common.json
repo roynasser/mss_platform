@@ -25,7 +25,14 @@
       "downtimeAvoided": "Downtime Avoided",
       "totalManualCost": "Total Manual Cost",
       "mssCost": "CG-One Service Cost",
-      "youSaved": "You Saved"
+      "youSaved": "You Saved",
+      "savedMessage": "Your CG-One managed services saved you significant time and money",
+      "benefitDescription": "By using our automated intervention services, you avoid manual labor costs and reduce downtime",
+      "customerBenefit": "Customer Benefit",
+      "downtimeCostAvoided": "Downtime Cost Avoided",
+      "mssServiceCost": "CG-One Service Cost",
+      "amountSaved": "Amount Saved",
+      "costBreakdown": "Cost Breakdown"
     }
   },
   "navigation": {
@@ -36,6 +43,9 @@
     "alerts": "Alerts",
     "cyberArsenal": "Cyber Arsenal",
     "interventions": "Interventions",
+    "allInterventions": "Intervention List",
+    "requestIntervention": "Request Intervention",
+    "manageInterventions": "Manage Interventions",
     "remoteAccess": "Remote Access",
     "customers": "Customers",
     "technicians": "Technicians",
@@ -503,7 +513,10 @@
     "description": "Description",
     "status": "Status",
     "download": "Download",
-    "close": "Close"
+    "close": "Close",
+    "device": "Device",
+    "location": "Location",
+    "saved": "Saved"
   },
   "user": {
     "customer": "Customer",

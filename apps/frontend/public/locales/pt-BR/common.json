@@ -25,7 +25,14 @@
       "downtimeAvoided": "Tempo de Inatividade Evitado",
       "totalManualCost": "Custo Manual Total",
       "mssCost": "Custo do Serviço CG-One",
-      "youSaved": "Você Economizou"
+      "youSaved": "Você Economizou",
+      "savedMessage": "Seus serviços gerenciados CG-One economizaram tempo e dinheiro significativos",
+      "benefitDescription": "Ao usar nossos serviços de intervenção automatizados, você evita custos de mão de obra manual e reduz o tempo de inatividade",
+      "customerBenefit": "Benefício do Cliente",
+      "downtimeCostAvoided": "Custo de Inatividade Evitado",
+      "mssServiceCost": "Custo do Serviço CG-One",
+      "amountSaved": "Valor Economizado",
+      "costBreakdown": "Detalhamento de Custos"
     }
   },
   "navigation": {
@@ -36,6 +43,9 @@
     "alerts": "Alertas",
     "cyberArsenal": "Arsenal Cibernético",
     "interventions": "Intervenções",
+    "allInterventions": "Lista de Intervenções",
+    "requestIntervention": "Solicitar Intervenção",
+    "manageInterventions": "Gerenciar Intervenções",
     "remoteAccess": "Acesso Remoto",
     "customers": "Clientes",
     "technicians": "Técnicos",
@@ -503,7 +513,10 @@
     "description": "Descrição",
     "status": "Status",
     "download": "Baixar",
-    "close": "Fechar"
+    "close": "Fechar",
+    "device": "Dispositivo",
+    "location": "Localização",
+    "saved": "Salvo"
   },
   "user": {
     "customer": "Cliente",
