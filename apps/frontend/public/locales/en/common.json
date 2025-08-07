@@ -1,4 +1,33 @@
 {
+  "reports": {
+    "threatIntelligence": {
+      "title": "Threat Intelligence Reports",
+      "description": "Monitor and analyze security threats across your infrastructure",
+      "criticalThreats": "Critical Threats",
+      "highPriority": "High Priority",
+      "newReports": "New Reports",
+      "threatsIdentified": "Threats Identified",
+      "riskScore": "Risk Score",
+      "threatIndicators": "Threat Indicators",
+      "recommendedActions": "Recommended Actions",
+      "affectedAssets": "Affected Assets"
+    },
+    "intervention": {
+      "title": "Intervention Reports",
+      "description": "Track interventions and cost savings across your infrastructure",
+      "costSaved": "Cost Saved",
+      "timeSaved": "Time Saved",
+      "cveFixed": "CVEs Fixed",
+      "devicesUpdated": "Devices Updated",
+      "baseLaborCost": "Base Labor Cost",
+      "seniorityMultiplier": "Seniority Multiplier",
+      "afterHoursSurcharge": "After Hours Surcharge",
+      "downtimeAvoided": "Downtime Avoided",
+      "totalManualCost": "Total Manual Cost",
+      "mssCost": "MSS Cost",
+      "youSaved": "You Saved"
+    }
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "reports": "Reports",
@@ -438,8 +467,23 @@
     "maximum": "Maximum",
     "count": "Count",
     "percentage": "Percentage",
-    "account": "Account",
-    "loading": "Loading..."
+    "timeRange": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days"
+    },
+    "severity": "Severity",
+    "allSeverities": "All Severities",
+    "threats": "Threats",
+    "assets": "Assets",
+    "indicators": "Indicators",
+    "viewDetails": "View Details",
+    "type": "Type",
+    "value": "Value",
+    "description": "Description",
+    "status": "Status",
+    "download": "Download",
+    "close": "Close"
   },
   "user": {
     "customer": "Customer",

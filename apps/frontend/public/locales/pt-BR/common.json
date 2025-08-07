@@ -1,4 +1,33 @@
 {
+  "reports": {
+    "threatIntelligence": {
+      "title": "Relatórios de Inteligência de Ameaças",
+      "description": "Monitore e analise ameaças de segurança em toda a sua infraestrutura",
+      "criticalThreats": "Ameaças Críticas",
+      "highPriority": "Alta Prioridade",
+      "newReports": "Novos Relatórios",
+      "threatsIdentified": "Ameaças Identificadas",
+      "riskScore": "Pontuação de Risco",
+      "threatIndicators": "Indicadores de Ameaça",
+      "recommendedActions": "Ações Recomendadas",
+      "affectedAssets": "Ativos Afetados"
+    },
+    "intervention": {
+      "title": "Relatórios de Intervenção",
+      "description": "Acompanhe intervenções e economias de custo em toda a sua infraestrutura",
+      "costSaved": "Custo Economizado",
+      "timeSaved": "Tempo Economizado",
+      "cveFixed": "CVEs Corrigidos",
+      "devicesUpdated": "Dispositivos Atualizados",
+      "baseLaborCost": "Custo Base de Mão de Obra",
+      "seniorityMultiplier": "Multiplicador de Senioridade",
+      "afterHoursSurcharge": "Sobretaxa Após Expediente",
+      "downtimeAvoided": "Tempo de Inatividade Evitado",
+      "totalManualCost": "Custo Manual Total",
+      "mssCost": "Custo MSS",
+      "youSaved": "Você Economizou"
+    }
+  },
   "navigation": {
     "dashboard": "Painel",
     "reports": "Relatórios",
@@ -438,8 +467,23 @@
     "maximum": "Máximo",
     "count": "Contagem",
     "percentage": "Porcentagem",
-    "account": "Conta",
-    "loading": "Carregando..."
+    "timeRange": {
+      "7d": "Últimos 7 dias",
+      "30d": "Últimos 30 dias",
+      "90d": "Últimos 90 dias"
+    },
+    "severity": "Severidade",
+    "allSeverities": "Todas as Severidades",
+    "threats": "Ameaças",
+    "assets": "Ativos",
+    "indicators": "Indicadores",
+    "viewDetails": "Ver Detalhes",
+    "type": "Tipo",
+    "value": "Valor",
+    "description": "Descrição",
+    "status": "Status",
+    "download": "Baixar",
+    "close": "Fechar"
   },
   "user": {
     "customer": "Cliente",
