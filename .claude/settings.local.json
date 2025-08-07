@@ -89,7 +89,10 @@
       "Bash(pkill:*)",
       "Bash(cd:*)",
       "Bash(gtimeout 10s npm run dev)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(cd:*)",
+      "Bash(cat:*)",
+      "Bash(docker ps:*)"
     ],
     "deny": []
   }
