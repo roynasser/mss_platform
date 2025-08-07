@@ -1,0 +1,190 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mss-frontend
+  labels:
+    app: mss-frontend
+    tier: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mss-frontend
+  template:
+    metadata:
+      labels:
+        app: mss-frontend
+        tier: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: mss-platform/frontend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NEXT_PUBLIC_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: mss-config
+              key: api.url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mss-api
+  labels:
+    app: mss-api
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mss-api
+  template:
+    metadata:
+      labels:
+        app: mss-api
+        tier: backend
+    spec:
+      containers:
+      - name: api
+        image: mss-platform/api:latest
+        ports:
+        - containerPort: 3001
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mss-secrets
+              key: database.url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: mss-secrets
+              key: redis.url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: mss-secrets
+              key: jwt.secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mss-postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mss-postgres
+  template:
+    metadata:
+      labels:
+        app: mss-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: mss_platform
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: mss-secrets
+              key: postgres.user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mss-secrets
+              key: postgres.password
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mss-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mss-redis
+  template:
+    metadata:
+      labels:
+        app: mss-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
