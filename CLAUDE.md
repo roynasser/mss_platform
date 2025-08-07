@@ -3,10 +3,11 @@
 ## Development Guidelines
 
 ### Commit Policy
-- **MANDATORY**: Every agent MUST commit and push changes immediately after making ANY file modifications
+- **MANDATORY**: Every agent MUST commit and push changes after making file modifications
 - **Commit Format**: Use conventional commit format with short, meaningful messages
 - **Auto-commit & Push**: All file changes should be automatically committed and pushed without user prompts
-- **No Batching**: Each file change or related set of changes gets its own commit and immediate push
+- **Batching**: Related changes should be committed together (e.g., feature + tests + docs)
+- **Frequency**: Wait at least 10 minutes between commits unless explicitly requested by user
 
 ### Commit Message Format
 ```
@@ -34,38 +35,46 @@ chore(deps): update dependencies
 ### Agent-Specific Guidelines
 
 #### All Agents Must:
-1. Commit AND push immediately after every file modification
+1. Commit AND push after completing related file modifications
 2. Use descriptive but concise commit messages
 3. Include relevant scope when applicable
 4. Follow conventional commit format
-5. Never batch multiple unrelated changes
-6. Execute `git add`, `git commit`, and `git push` as a single workflow after changes
+5. Group related changes in a single commit (feature + tests + docs)
+6. Wait at least 10 minutes between commits (unless user requests immediate commit)
+7. Execute `git add`, `git commit`, and `git push` as a single workflow
 
 #### Example Workflow:
 ```bash
-# After creating a new component
-git add src/components/NewComponent.tsx
-git commit -m "feat(components): add user profile component"
+# After creating a new feature with tests and docs
+git add src/components/NewComponent.tsx src/tests/NewComponent.test.tsx docs/components.md
+git commit -m "feat(components): add user profile component with tests"
+git push origin main
 
-# After updating documentation
-git add docs/API.md
-git commit -m "docs(api): add authentication endpoints"
-
-# After fixing a bug
-git add src/services/auth.ts
+# After fixing a bug and updating related tests
+git add src/services/auth.ts src/tests/auth.test.ts
 git commit -m "fix(auth): resolve token expiration handling"
+git push origin main
+
+# After documentation updates
+git add docs/API.md docs/README.md
+git commit -m "docs(api): update authentication endpoints documentation"
+git push origin main
 ```
 
 ### Automatic Commit Requirements
 
-Every agent should automatically run these commands after making changes:
+Every agent should automatically run these commands after completing related changes:
 ```bash
-git add .
+git add <related files>
 git commit -m "<appropriate commit message>"
 git push origin main
 ```
 
-No user confirmation required - commit immediately and automatically push to GitHub.
+**Timing Rules:**
+- Group related changes together in one commit
+- Wait at least 10 minutes between commits
+- No user confirmation required - commit and push automatically
+- Exception: Immediate commit if user explicitly requests it
 
 ### Quality Standards
 - Keep messages under 72 characters for the subject line
