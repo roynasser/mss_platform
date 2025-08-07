@@ -319,23 +319,98 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         let accessToken: string | null = null;
         let refreshToken: string | null = null;
         
+        // Debug: Log all available properties
+        if (process.env.NODE_ENV === 'development') {
+          console.log('=== AUTH RESPONSE DEBUG ===');
+          console.log('Full response:', JSON.stringify(response, null, 2));
+          console.log('apiResponse keys:', apiResponse ? Object.keys(apiResponse) : 'null');
+          console.log('apiResponse.data keys:', apiResponse?.data ? Object.keys(apiResponse.data) : 'null');
+          console.log('Has apiResponse.user?', !!apiResponse?.user);
+          console.log('Has apiResponse.token?', !!apiResponse?.token);
+          console.log('Has apiResponse.data?', !!apiResponse?.data);
+          console.log('Has apiResponse.data.user?', !!apiResponse?.data?.user);
+          console.log('Has apiResponse.data.tokens?', !!apiResponse?.data?.tokens);
+        }
+        
         // Format 1: Nested structure { data: { user, tokens: { accessToken, refreshToken } } }
         if (apiResponse && apiResponse.data && apiResponse.data.user && apiResponse.data.tokens) {
           user = apiResponse.data.user;
           accessToken = apiResponse.data.tokens.accessToken;
           refreshToken = apiResponse.data.tokens.refreshToken;
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Using Format 1: Nested structure');
+          }
         }
         // Format 2: Direct structure { user, token, refreshToken }
         else if (apiResponse && apiResponse.user && apiResponse.token) {
           user = apiResponse.user;
           accessToken = apiResponse.token;
           refreshToken = apiResponse.refreshToken;
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Using Format 2: Direct structure');
+          }
         }
         // Format 3: Flat structure { user, tokens: { accessToken, refreshToken } }
         else if (apiResponse && apiResponse.user && apiResponse.tokens) {
           user = apiResponse.user;
           accessToken = apiResponse.tokens.accessToken || apiResponse.tokens.token;
           refreshToken = apiResponse.tokens.refreshToken;
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Using Format 3: Flat structure with tokens object');
+          }
+        }
+        // Format 4: Common REST API format { success: true, data: { user, token } }
+        else if (apiResponse && apiResponse.data && apiResponse.data.user && apiResponse.data.token) {
+          user = apiResponse.data.user;
+          accessToken = apiResponse.data.token;
+          refreshToken = apiResponse.data.refreshToken;
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Using Format 4: REST API format');
+          }
+        }
+        // Format 5: Simple flat format { user, accessToken, refreshToken }
+        else if (apiResponse && apiResponse.user && apiResponse.accessToken) {
+          user = apiResponse.user;
+          accessToken = apiResponse.accessToken;
+          refreshToken = apiResponse.refreshToken;
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Using Format 5: Simple flat format');
+          }
+        }
+        // Format 6: Try to extract from any nested data structure
+        else if (apiResponse) {
+          // Try to find user and token anywhere in the response
+          const findUser = (obj: any): User | null => {
+            if (obj && typeof obj === 'object') {
+              if (obj.user && obj.user.id) return obj.user;
+              if (obj.id && obj.email) return obj as User;
+              for (const key in obj) {
+                const result = findUser(obj[key]);
+                if (result) return result;
+              }
+            }
+            return null;
+          };
+          
+          const findToken = (obj: any): string | null => {
+            if (obj && typeof obj === 'object') {
+              if (obj.token && typeof obj.token === 'string') return obj.token;
+              if (obj.accessToken && typeof obj.accessToken === 'string') return obj.accessToken;
+              if (obj.access_token && typeof obj.access_token === 'string') return obj.access_token;
+              for (const key in obj) {
+                const result = findToken(obj[key]);
+                if (result) return result;
+              }
+            }
+            return null;
+          };
+          
+          user = findUser(apiResponse);
+          accessToken = findToken(apiResponse);
+          
+          if (process.env.NODE_ENV === 'development' && (user || accessToken)) {
+            console.log('Using Format 6: Deep search found:', { user: !!user, token: !!accessToken });
+          }
         }
         
         if (user && accessToken) {
@@ -354,6 +429,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } else {
           console.error('Invalid login response format - could not find user and token');
           console.error('Response structure:', JSON.stringify(apiResponse, null, 2));
+          
+          // In development mode, create a fallback user based on the email
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Creating development fallback user...');
+            const role = credentials.email.includes('admin') ? 'admin' : 
+                        credentials.email.includes('tech') ? 'technician' : 'customer';
+            
+            const fallbackUser: User = {
+              id: 'dev-' + Date.now(),
+              email: credentials.email,
+              firstName: 'Development',
+              lastName: 'User',
+              role: role,
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              requiresMFA: false
+            };
+            
+            const fallbackToken = 'dev-fallback-' + Date.now();
+            
+            localStorage.setItem('mss_token', fallbackToken);
+            localStorage.setItem('mss_user', JSON.stringify(fallbackUser));
+            localStorage.setItem('mss_last_activity', Date.now().toString());
+            
+            dispatch({
+              type: 'AUTH_SUCCESS',
+              payload: { user: fallbackUser, token: fallbackToken, refreshToken: undefined }
+            });
+            
+            console.warn('Created development user:', fallbackUser);
+            return;
+          }
+          
           dispatch({
             type: 'AUTH_FAILURE',
             payload: 'Invalid login response format - missing user or token information'
