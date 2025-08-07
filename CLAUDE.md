@@ -60,9 +60,10 @@ Every agent should automatically run these commands after making changes:
 ```bash
 git add .
 git commit -m "<appropriate commit message>"
+git push origin main
 ```
 
-No user confirmation required - commit immediately and automatically.
+No user confirmation required - commit immediately and automatically push to GitHub.
 
 ### Quality Standards
 - Keep messages under 72 characters for the subject line
