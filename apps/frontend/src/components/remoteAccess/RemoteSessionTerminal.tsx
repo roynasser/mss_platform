@@ -61,6 +61,8 @@ interface RemoteSessionTerminalProps {
   deviceIp: string;
   protocol: 'ssh' | 'rdp' | 'vnc';
   customer: string;
+  initialIdentity?: string;
+  vpnConnected?: boolean;
   onClose?: () => void;
 }
 
@@ -69,6 +71,8 @@ export const RemoteSessionTerminal: React.FC<RemoteSessionTerminalProps> = ({
   deviceIp,
   protocol,
   customer,
+  initialIdentity = 'technician',
+  vpnConnected: initialVpnConnected = true,
   onClose,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -83,8 +87,8 @@ export const RemoteSessionTerminal: React.FC<RemoteSessionTerminalProps> = ({
   const [showFileTransfer, setShowFileTransfer] = useState(false);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
   const [showIdentitySelector, setShowIdentitySelector] = useState(false);
-  const [vpnConnected, setVpnConnected] = useState(true);
-  const [selectedIdentity, setSelectedIdentity] = useState('technician');
+  const [vpnConnected, setVpnConnected] = useState(initialVpnConnected);
+  const [selectedIdentity, setSelectedIdentity] = useState(initialIdentity);
   const terminalRef = useRef<HTMLDivElement>(null);
 
   // Simulate terminal output

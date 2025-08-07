@@ -486,7 +486,7 @@ export const RemoteAccessHub: React.FC = () => {
                         fullWidth
                         onClick={() => {
                           const protocol = device.protocols.includes('ssh') ? 'ssh' : device.protocols[0];
-                          router.push(`/dashboard/remote-access/session?device=${device.name}&ip=${device.ip}&protocol=${protocol}&customer=${encodeURIComponent(device.customer)}`);
+                          router.push(`/dashboard/remote-access/session?device=${device.name}&ip=${device.ip}&protocol=${protocol}&customer=${encodeURIComponent(device.customer)}&type=${device.type}`);
                         }}
                       >
                         Connect
@@ -567,7 +567,7 @@ export const RemoteAccessHub: React.FC = () => {
                             const device = devices.find(d => d.id === session.deviceId);
                             if (device) {
                               const protocol = session.protocol.toLowerCase() as 'ssh' | 'rdp' | 'vnc';
-                              router.push(`/dashboard/remote-access/session?device=${device.name}&ip=${device.ip}&protocol=${protocol}&customer=${encodeURIComponent(session.customer)}`);
+                              router.push(`/dashboard/remote-access/session?device=${device.name}&ip=${device.ip}&protocol=${protocol}&customer=${encodeURIComponent(session.customer)}&type=${device.type}`);
                             }
                           }}
                         >
