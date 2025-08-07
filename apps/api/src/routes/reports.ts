@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import { getDB } from '@/database/connection';
 import { requireRole } from '@/middleware/auth';
-// TODO: Install these dependencies and uncomment when ready
-// import PDFDocument from 'pdfkit';
-// import { Parser } from 'json2csv';
-// import { Readable } from 'stream';
+import PDFDocument from 'pdfkit';
+import { Parser } from '@json2csv/node';
+import { Readable } from 'stream';
 
 const router = Router();
 
