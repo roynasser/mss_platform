@@ -407,6 +407,9 @@
     "decimal": "."
   },
   "common": {
+    "changeLanguage": "Change Language",
+    "account": "Account",
+    "loading": "Loading",
     "yes": "Yes",
     "no": "No",
     "ok": "OK",
