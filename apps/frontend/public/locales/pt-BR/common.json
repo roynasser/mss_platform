@@ -627,5 +627,20 @@
     "nameOrDomain": "Nome ou domínio...",
     "noOrganizationsFound": "Nenhuma organização encontrada com os filtros atuais.",
     "ssoEnabledText": "Single Sign-On habilitado"
-  }
+  },
+  "severity": {
+    "critical": "Crítica",
+    "high": "Alta", 
+    "medium": "Média",
+    "low": "Baixa"
+  },
+  "technicianLevel": {
+    "junior": "Técnico Júnior",
+    "expert": "Técnico Especialista"
+  },
+  "executionWindow": {
+    "emergency": "Emergência"
+  },
+  "impact": "Impacto",
+  "devices": "Dispositivos"
 }
