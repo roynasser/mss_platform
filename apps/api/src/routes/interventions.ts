@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { getDB } from '@/database/connection';
 import { requireRole } from '@/middleware/auth';
-import { io } from '@/server';
 
 const router = Router();
 
@@ -221,14 +220,14 @@ router.post('/', requireRole(['admin', 'request_user', 'basic_user']), async (re
 
     const intervention = result.rows[0];
 
-    // Emit real-time notification to technicians
-    io.emit('new-intervention', {
-      id: intervention.id,
-      title: intervention.title,
-      priority: intervention.priority,
-      customerOrgId: intervention.customer_org_id,
-      createdAt: intervention.created_at
-    });
+    // TODO: Add real-time notification when socket.io is properly configured
+    // io.emit('new-intervention', {
+    //   id: intervention.id,
+    //   title: intervention.title,
+    //   priority: intervention.priority,
+    //   customerOrgId: intervention.customer_org_id,
+    //   createdAt: intervention.created_at
+    // });
 
     res.status(201).json({
       success: true,
@@ -270,13 +269,13 @@ router.patch('/:id/assign', requireRole(['admin', 'technician']), async (req, re
       RETURNING *
     `, [assigned_to, req.user?.userId, internal_notes, id]);
 
-    // Emit real-time notification
-    io.emit(`intervention-assigned-${id}`, {
-      id: result.rows[0].id,
-      status: result.rows[0].status,
-      assignedTo: assigned_to,
-      assignedAt: result.rows[0].assigned_at
-    });
+    // TODO: Add real-time notification when socket.io is properly configured
+    // io.emit(`intervention-assigned-${id}`, {
+    //   id: result.rows[0].id,
+    //   status: result.rows[0].status,
+    //   assignedTo: assigned_to,
+    //   assignedAt: result.rows[0].assigned_at
+    // });
 
     res.json({
       success: true,
@@ -349,13 +348,13 @@ router.patch('/:id/status', requireRole(['technician', 'admin']), async (req, re
       params
     );
 
-    // Emit real-time update
-    io.emit(`intervention-updated-${id}`, {
-      id: result.rows[0].id,
-      status: result.rows[0].status,
-      completedAt: result.rows[0].completed_at,
-      updatedAt: result.rows[0].updated_at
-    });
+    // TODO: Add real-time update when socket.io is properly configured
+    // io.emit(`intervention-updated-${id}`, {
+    //   id: result.rows[0].id,
+    //   status: result.rows[0].status,
+    //   completedAt: result.rows[0].completed_at,
+    //   updatedAt: result.rows[0].updated_at
+    // });
 
     // If completed, calculate SLA performance
     const intervention = result.rows[0];

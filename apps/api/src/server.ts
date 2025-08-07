@@ -24,6 +24,8 @@ import auditRoutes from '@/routes/audit';
 import reportRoutes from '@/routes/reports';
 import alertRoutes from '@/routes/alerts';
 import interventionRoutes from '@/routes/interventions';
+import dashboardRoutes from '@/routes/dashboard';
+import analyticsRoutes from '@/routes/analytics';
 
 dotenv.config();
 
@@ -75,6 +77,8 @@ app.use('/api/audit', authMiddleware, auditRoutes);
 app.use('/api/reports', authMiddleware, reportRoutes);
 app.use('/api/alerts', authMiddleware, alertRoutes);
 app.use('/api/interventions', authMiddleware, interventionRoutes);
+app.use('/api/dashboard', authMiddleware, dashboardRoutes);
+app.use('/api/analytics', authMiddleware, analyticsRoutes);
 
 // API v1 routes (alternative paths)
 app.use('/api/v1/auth', authRoutes);
@@ -86,6 +90,8 @@ app.use('/api/v1/audit', authMiddleware, auditRoutes);
 app.use('/api/v1/reports', authMiddleware, reportRoutes);
 app.use('/api/v1/alerts', authMiddleware, alertRoutes);
 app.use('/api/v1/interventions', authMiddleware, interventionRoutes);
+app.use('/api/v1/dashboard', authMiddleware, dashboardRoutes);
+app.use('/api/v1/analytics', authMiddleware, analyticsRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {

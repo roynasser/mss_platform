@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { getDB } from '@/database/connection';
 import { requireRole } from '@/middleware/auth';
-import PDFDocument from 'pdfkit';
-import { Parser } from 'json2csv';
-import { Readable } from 'stream';
+// TODO: Install these dependencies and uncomment when ready
+// import PDFDocument from 'pdfkit';
+// import { Parser } from 'json2csv';
+// import { Readable } from 'stream';
 
 const router = Router();
 
@@ -414,48 +415,19 @@ router.get('/:id/export', async (req, res, next) => {
         break;
         
       case 'csv':
-        const csvFields = [
-          'id', 'customerName', 'title', 'reportType', 'severity', 
-          'status', 'generatedAt', 'publishedAt'
-        ];
-        const json2csvParser = new Parser({ fields: csvFields });
-        const csv = json2csvParser.parse([exportData]);
-        
-        res.header('Content-Type', 'text/csv');
-        res.header('Content-Disposition', `attachment; filename="report-${id}.csv"`);
-        res.send(csv);
+        // TODO: Implement CSV export when json2csv is installed
+        res.status(501).json({
+          success: false,
+          error: 'CSV export not yet implemented - install json2csv package'
+        });
         break;
         
       case 'pdf':
-        const doc = new PDFDocument();
-        res.header('Content-Type', 'application/pdf');
-        res.header('Content-Disposition', `attachment; filename="report-${id}.pdf"`);
-        
-        // Generate PDF content
-        doc.fontSize(20).text(report.title, 50, 50);
-        doc.fontSize(12).text(`Customer: ${report.customer_name}`, 50, 80);
-        doc.text(`Report Type: ${report.report_type}`, 50, 95);
-        doc.text(`Severity: ${report.severity}`, 50, 110);
-        doc.text(`Generated: ${new Date(report.generated_at).toLocaleDateString()}`, 50, 125);
-        
-        if (report.description) {
-          doc.text('Description:', 50, 150);
-          doc.text(report.description, 50, 165, { width: 500 });
-        }
-        
-        // Add report data if available
-        if (report.report_data && report.report_data.summary) {
-          const yPos = 200;
-          doc.text('Summary:', 50, yPos);
-          const summary = report.report_data.summary;
-          if (summary.alerts) {
-            doc.text(`Total Alerts: ${summary.alerts.total_alerts}`, 50, yPos + 20);
-            doc.text(`Critical Alerts: ${summary.alerts.critical_alerts}`, 50, yPos + 35);
-          }
-        }
-        
-        doc.pipe(res);
-        doc.end();
+        // TODO: Implement PDF export when pdfkit is installed
+        res.status(501).json({
+          success: false,
+          error: 'PDF export not yet implemented - install pdfkit package'
+        });
         break;
         
       default:
