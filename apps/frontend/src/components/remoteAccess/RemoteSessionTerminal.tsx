@@ -153,140 +153,176 @@ export const RemoteSessionTerminal: React.FC<RemoteSessionTerminalProps> = ({
       const cmd = currentCommand.toLowerCase().trim();
       const args = cmd.split(' ');
       
-      // Simulate command responses with many demo commands
-      if (cmd === 'ls' || cmd === 'll') {
-        newContent.push('drwxr-xr-x 2 technician technician 4096 Aug  7 10:30 Desktop');
-        newContent.push('drwxr-xr-x 2 technician technician 4096 Aug  7 09:15 Documents');
-        newContent.push('-rw-r--r-- 1 technician technician  220 Aug  1 12:00 .bash_logout');
-        newContent.push('-rw-r--r-- 1 technician technician 3771 Aug  1 12:00 .bashrc');
-        newContent.push('-rw-r--r-- 1 technician technician  807 Aug  1 12:00 .profile');
-        newContent.push('-rw-r--r-- 1 technician technician 1024 Aug  7 10:25 config.txt');
-      } else if (cmd === 'pwd') {
-        newContent.push('/home/technician');
-      } else if (cmd === 'whoami') {
-        newContent.push('technician');
-      } else if (cmd === 'date') {
-        newContent.push(new Date().toString());
-      } else if (cmd === 'uptime') {
-        newContent.push('10:35:42 up 5 days, 12:45,  1 user,  load average: 0.15, 0.25, 0.18');
-      } else if (cmd === 'df -h' || cmd === 'df') {
-        newContent.push('Filesystem      Size  Used Avail Use% Mounted on');
-        newContent.push('/dev/sda1        20G  8.5G   10G  47% /');
-        newContent.push('/dev/sda2       100G   45G   50G  48% /home');
-        newContent.push('tmpfs           2.0G     0  2.0G   0% /tmp');
-      } else if (cmd === 'free -h' || cmd === 'free') {
-        newContent.push('              total        used        free      shared  buff/cache   available');
-        newContent.push('Mem:           4.0G        1.2G        1.5G         56M        1.3G        2.6G');
-        newContent.push('Swap:          2.0G          0B        2.0G');
-      } else if (cmd === 'ps aux' || cmd === 'ps') {
-        newContent.push('USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND');
-        newContent.push('root         1  0.1  0.2  19364  1024 ?        Ss   Aug01   0:05 /sbin/init');
-        newContent.push('root         2  0.0  0.0      0     0 ?        S    Aug01   0:00 [kthreadd]');
-        newContent.push('technician 1234  0.0  0.1  21456  2048 pts/0    S    10:30   0:00 -bash');
-      } else if (cmd === 'top') {
-        newContent.push('Tasks: 128 total,   1 running, 127 sleeping,   0 stopped,   0 zombie');
-        newContent.push('%Cpu(s):  2.3 us,  1.1 sy,  0.0 ni, 96.2 id,  0.4 wa,  0.0 hi,  0.0 si,  0.0 st');
-        newContent.push('MiB Mem :   4096.0 total,   1536.0 free,   1280.0 used,   1280.0 buff/cache');
-        newContent.push('Press q to exit top...');
-      } else if (cmd === 'netstat -an' || cmd === 'netstat') {
-        newContent.push('Proto Recv-Q Send-Q Local Address           Foreign Address         State');
-        newContent.push('tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN');
-        newContent.push('tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN');
-        newContent.push('tcp        0      0 192.168.1.10:22         10.0.0.5:54321          ESTABLISHED');
-      } else if (cmd === 'ifconfig' || cmd === 'ip addr') {
-        newContent.push('eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500');
-        newContent.push('        inet 192.168.1.10  netmask 255.255.255.0  broadcast 192.168.1.255');
-        newContent.push('        inet6 fe80::a00:27ff:fe4e:66a1  prefixlen 64  scopeid 0x20<link>');
-        newContent.push('        ether 08:00:27:4e:66:a1  txqueuelen 1000  (Ethernet)');
-      } else if (cmd === 'systemctl status nginx' || cmd === 'service nginx status') {
-        newContent.push('● nginx.service - A high performance web server and a reverse proxy server');
-        newContent.push('   Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)');
-        newContent.push('   Active: active (running) since Tue 2025-08-06 09:30:15 UTC; 1 day 1h ago');
-        newContent.push('   Main PID: 1234 (nginx)');
-      } else if (cmd.startsWith('tail ') || cmd.startsWith('cat ')) {
-        const filename = args[1] || 'file.txt';
-        if (filename.includes('log')) {
-          newContent.push('[2025-08-07 10:30:15] INFO: Application started successfully');
-          newContent.push('[2025-08-07 10:31:22] DEBUG: Processing user request');
-          newContent.push('[2025-08-07 10:32:45] WARNING: High memory usage detected');
-          newContent.push('[2025-08-07 10:33:12] INFO: Backup completed successfully');
-        } else {
-          newContent.push(`This is the content of ${filename}`);
-          newContent.push('Sample configuration file');
-          newContent.push('# Configuration settings');
-          newContent.push('server_name=production');
-          newContent.push('port=8080');
-        }
-      } else if (cmd.startsWith('grep ')) {
-        newContent.push('Line 1: This line contains the search term');
-        newContent.push('Line 15: Another match for your search');
-        newContent.push('Line 42: Final occurrence of the pattern');
-      } else if (cmd === 'history') {
-        newContent.push('    1  ls -la');
-        newContent.push('    2  pwd');
-        newContent.push('    3  systemctl status nginx');
-        newContent.push('    4  tail -f /var/log/nginx/access.log');
-        newContent.push('    5  top');
-        newContent.push('    6  netstat -an');
-      } else if (cmd === 'env' || cmd === 'printenv') {
-        newContent.push('USER=technician');
-        newContent.push('HOME=/home/technician');
-        newContent.push('PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin');
-        newContent.push('SHELL=/bin/bash');
-        newContent.push('TERM=xterm-256color');
-      } else if (cmd === 'uname -a') {
-        newContent.push('Linux web-prod-01 5.15.0-72-generic #79-Ubuntu SMP Wed Apr 19 08:22:18 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux');
-      } else if (cmd === 'lscpu') {
-        newContent.push('Architecture:        x86_64');
-        newContent.push('CPU op-mode(s):      32-bit, 64-bit');
-        newContent.push('CPU(s):              4');
-        newContent.push('Model name:          Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz');
-      } else if (cmd.startsWith('find ')) {
-        newContent.push('./config.txt');
-        newContent.push('./Documents/readme.md');
-        newContent.push('./Documents/backup.tar.gz');
-      } else if (cmd === 'mount') {
-        newContent.push('/dev/sda1 on / type ext4 (rw,relatime,errors=remount-ro)');
-        newContent.push('/dev/sda2 on /home type ext4 (rw,relatime)');
-        newContent.push('tmpfs on /tmp type tmpfs (rw,nosuid,nodev,noexec,relatime,size=2097152k)');
+      // Simulate firewall/networking command responses
+      if (cmd === 'show version' || cmd === 'show ver') {
+        newContent.push('Model: Check Point Security Gateway R81.20');
+        newContent.push('Version: R81.20 - Build 631');
+        newContent.push('Kernel: 3.10.0-957.21.3.el7');
+        newContent.push('Platform: Open Server');
+        newContent.push('Serial Number: CP123456789');
+        newContent.push('Uptime: 45 days, 12:34:56');
+        newContent.push('License Status: Valid until 2026-12-31');
+      } else if (cmd === 'show interfaces' || cmd === 'show int') {
+        newContent.push('eth0     Link UP, 1000 Mbps, Full Duplex');
+        newContent.push('         IP: 10.0.0.1/24');
+        newContent.push('         RX: 1,234,567,890 bytes (1.2 GB)');
+        newContent.push('         TX: 987,654,321 bytes (987 MB)');
+        newContent.push('eth1     Link UP, 1000 Mbps, Full Duplex');
+        newContent.push('         IP: 192.168.1.1/24');
+        newContent.push('         RX: 456,789,012 bytes (456 MB)');
+        newContent.push('         TX: 234,567,890 bytes (234 MB)');
+        newContent.push('eth2     Link DOWN');
+      } else if (cmd === 'show route' || cmd === 'show ip route') {
+        newContent.push('Destination      Gateway         Interface  Type');
+        newContent.push('0.0.0.0/0       10.0.0.254      eth0       Static');
+        newContent.push('10.0.0.0/24     0.0.0.0         eth0       Connected');
+        newContent.push('192.168.1.0/24  0.0.0.0         eth1       Connected');
+        newContent.push('172.16.0.0/16   10.0.0.2        eth0       Static');
+        newContent.push('10.10.0.0/16    10.0.0.3        eth0       OSPF');
+      } else if (cmd === 'show policy' || cmd === 'show security-policy') {
+        newContent.push('Rule  Name            Source        Destination   Service    Action   Hits');
+        newContent.push('1     Allow_Internal  Internal_Net  Any          Any        Accept   1,234,567');
+        newContent.push('2     Web_Access     Any           Web_Servers   HTTP/HTTPS Accept   567,890');
+        newContent.push('3     Block_P2P      Any           Any          P2P_Apps   Drop     45,678');
+        newContent.push('4     VPN_Access     VPN_Users     Internal_Net  Any        Accept   23,456');
+        newContent.push('5     Default_Drop   Any           Any          Any        Drop     789,012');
+      } else if (cmd === 'show nat' || cmd === 'show nat-policy') {
+        newContent.push('NAT Rules:');
+        newContent.push('Rule  Type    Source          Destination     Translation');
+        newContent.push('1     Hide    192.168.1.0/24  Internet        10.0.0.1');
+        newContent.push('2     Static  Any             10.0.0.10:443   192.168.1.100:443');
+        newContent.push('3     Static  Any             10.0.0.11:80    192.168.1.101:80');
+        newContent.push('Active NAT Sessions: 3,456');
+      } else if (cmd === 'show vpn' || cmd === 'show crypto ipsec sa') {
+        newContent.push('VPN Status:');
+        newContent.push('Tunnel   Remote IP       Status    Uptime        TX/RX');
+        newContent.push('VPN-1    203.0.113.10   UP        5d 12h 34m    1.2GB/3.4GB');
+        newContent.push('VPN-2    198.51.100.20  UP        2d 6h 15m     567MB/890MB');
+        newContent.push('VPN-3    192.0.2.30     DOWN      -             -');
+        newContent.push('Active VPN Users: 127');
+      } else if (cmd === 'show log' || cmd === 'show log tail') {
+        const now = new Date();
+        newContent.push(`${now.toISOString()} ACCEPT  src=192.168.1.50 dst=8.8.8.8 proto=UDP dport=53`);
+        newContent.push(`${now.toISOString()} DROP    src=203.0.113.99 dst=10.0.0.1 proto=TCP dport=22 reason=GeoBlock`);
+        newContent.push(`${now.toISOString()} ACCEPT  src=10.10.10.5 dst=192.168.1.100 proto=TCP dport=443`);
+        newContent.push(`${now.toISOString()} IPS     Alert: SQL Injection attempt blocked from 198.51.100.55`);
+        newContent.push(`${now.toISOString()} ACCEPT  src=192.168.1.75 dst=52.84.228.25 proto=TCP dport=443`);
+      } else if (cmd === 'show threat-prevention' || cmd === 'show ips') {
+        newContent.push('Threat Prevention Status: Active');
+        newContent.push('Last Update: 2025-08-07 09:00:00');
+        newContent.push('Signatures: 45,678 (Critical: 1,234, High: 5,678, Medium: 12,345)');
+        newContent.push('');
+        newContent.push('Recent Threats Blocked:');
+        newContent.push('  - Malware: Trojan.GenericKD.45678 (15 attempts)');
+        newContent.push('  - Exploit: CVE-2024-0132 (3 attempts)');
+        newContent.push('  - Botnet: Command & Control communication (8 attempts)');
+      } else if (cmd === 'show cpu' || cmd === 'show system resources') {
+        newContent.push('CPU Usage:');
+        newContent.push('  Core 0: 23%');
+        newContent.push('  Core 1: 18%');
+        newContent.push('  Core 2: 31%');
+        newContent.push('  Core 3: 12%');
+        newContent.push('  Average: 21%');
+        newContent.push('');
+        newContent.push('Memory: 8192 MB total, 3456 MB used (42%)');
+        newContent.push('Connections: 45,678 concurrent');
+      } else if (cmd === 'show sessions' || cmd === 'show conn') {
+        newContent.push('Active Sessions: 45,678');
+        newContent.push('Source           Destination      Service  State       Duration');
+        newContent.push('192.168.1.50     8.8.8.8:53      DNS      ESTABLISHED 00:00:02');
+        newContent.push('192.168.1.75     52.84.228.25:443 HTTPS   ESTABLISHED 00:05:34');
+        newContent.push('10.10.10.5       192.168.1.100:22 SSH     ESTABLISHED 01:23:45');
+        newContent.push('192.168.1.100    203.0.113.10:443 HTTPS   TIME_WAIT   00:00:10');
+      } else if (cmd === 'show ha' || cmd === 'show cluster') {
+        newContent.push('High Availability Status:');
+        newContent.push('  Local:  Active (Primary)');
+        newContent.push('  Peer:   Standby (10.0.0.2)');
+        newContent.push('  State:  Synchronized');
+        newContent.push('  Last Failover: 45 days ago');
+        newContent.push('  Sync Status: 100%');
+      } else if (cmd === 'show users' || cmd === 'show administrators') {
+        newContent.push('Active Administrators:');
+        newContent.push('Username     Role          Last Login         From');
+        newContent.push('admin        Super Admin   2025-08-07 10:30   10.0.0.5');
+        newContent.push('technician   Read-Write    2025-08-07 10:35   VPN');
+        newContent.push('monitor      Read-Only     2025-08-07 09:15   192.168.1.50');
+      } else if (cmd === 'fw stat' || cmd === 'show firewall statistics') {
+        newContent.push('Firewall Statistics:');
+        newContent.push('  Accepted Packets:  12,345,678');
+        newContent.push('  Dropped Packets:   456,789');
+        newContent.push('  Rejected Packets:  23,456');
+        newContent.push('  Active Rules:      256');
+        newContent.push('  Rule Hits Today:   1,234,567');
+      } else if (cmd === 'show blocked' || cmd === 'show drop-log') {
+        newContent.push('Recently Blocked Connections:');
+        newContent.push('Time         Source          Destination    Reason');
+        newContent.push('10:35:22     185.220.101.5   10.0.0.1:22   Brute Force Detection');
+        newContent.push('10:34:15     45.155.205.233  Any:445       Known Malicious IP');
+        newContent.push('10:33:08     192.168.1.99    8.8.8.8:53    DNS Tunneling Detected');
+        newContent.push('10:32:45     203.0.113.77    10.0.0.10:80  Rate Limit Exceeded');
+      } else if (cmd === 'show application' || cmd === 'show app-control') {
+        newContent.push('Application Control:');
+        newContent.push('Application      Sessions  Bandwidth   Policy');
+        newContent.push('HTTPS           23,456    1.2 GB/s    Allow');
+        newContent.push('SSH             127       45 MB/s     Allow');
+        newContent.push('BitTorrent      0         0 B/s       Block');
+        newContent.push('Skype           45        12 MB/s     Limit(10MB)');
+        newContent.push('Netflix         234       567 MB/s    Allow');
+      } else if (cmd.startsWith('ping ')) {
+        const host = args[1] || '8.8.8.8';
+        newContent.push(`PING ${host}: 56 data bytes`);
+        newContent.push(`64 bytes from ${host}: icmp_seq=0 ttl=117 time=12.3 ms`);
+        newContent.push(`64 bytes from ${host}: icmp_seq=1 ttl=117 time=11.8 ms`);
+        newContent.push(`64 bytes from ${host}: icmp_seq=2 ttl=117 time=12.1 ms`);
+        newContent.push(`--- ${host} ping statistics ---`);
+        newContent.push('3 packets transmitted, 3 packets received, 0.0% packet loss');
+      } else if (cmd.startsWith('traceroute ') || cmd.startsWith('tracert ')) {
+        const host = args[1] || '8.8.8.8';
+        newContent.push(`traceroute to ${host}, 30 hops max`);
+        newContent.push(' 1  10.0.0.254     1.234 ms');
+        newContent.push(' 2  172.16.0.1     5.678 ms');
+        newContent.push(' 3  203.0.113.1    12.345 ms');
+        newContent.push(` 4  ${host}         23.456 ms`);
+      } else if (cmd === 'show config' || cmd === 'show run') {
+        newContent.push('Running Configuration:');
+        newContent.push('hostname CP-FW-EDGE-01');
+        newContent.push('interface eth0 10.0.0.1/24');
+        newContent.push('interface eth1 192.168.1.1/24');
+        newContent.push('route 0.0.0.0/0 10.0.0.254');
+        newContent.push('policy id 1 from Internal to Any service Any action accept');
+        newContent.push('nat hide source 192.168.1.0/24 behind 10.0.0.1');
       } else if (cmd === 'cheat' || cmd === 'help' || cmd === '?') {
-        newContent.push('=== SSH Command Cheat Sheet ===');
-        newContent.push('Basic Navigation:');
-        newContent.push('  ls, ll          - List files and directories');
-        newContent.push('  pwd             - Show current directory');
-        newContent.push('  cd <dir>        - Change directory');
-        newContent.push('  cat <file>      - Display file content');
-        newContent.push('  tail <file>     - Show end of file');
+        newContent.push('=== Firewall Command Cheat Sheet ===');
+        newContent.push('Device Information:');
+        newContent.push('  show version           - Display firmware version and uptime');
+        newContent.push('  show interfaces        - Show network interface status');
+        newContent.push('  show cpu               - Display CPU usage');
+        newContent.push('  show ha                - Show High Availability status');
         newContent.push('');
-        newContent.push('System Information:');
-        newContent.push('  whoami          - Show current user');
-        newContent.push('  date            - Show current date/time');
-        newContent.push('  uptime          - Show system uptime');
-        newContent.push('  uname -a        - Show system information');
-        newContent.push('  lscpu           - Show CPU information');
+        newContent.push('Security Policies:');
+        newContent.push('  show policy            - Display firewall rules');
+        newContent.push('  show nat               - Show NAT rules and translations');
+        newContent.push('  show vpn               - Display VPN tunnel status');
+        newContent.push('  show threat-prevention - Show IPS/threat status');
         newContent.push('');
-        newContent.push('System Monitoring:');
-        newContent.push('  top             - Show running processes');
-        newContent.push('  ps aux          - List all processes');
-        newContent.push('  free -h         - Show memory usage');
-        newContent.push('  df -h           - Show disk usage');
-        newContent.push('  netstat -an     - Show network connections');
-        newContent.push('  ifconfig        - Show network interfaces');
+        newContent.push('Traffic Monitoring:');
+        newContent.push('  show sessions          - Display active connections');
+        newContent.push('  show log               - View security logs');
+        newContent.push('  show blocked           - Show dropped connections');
+        newContent.push('  show application       - Application control status');
+        newContent.push('  fw stat                - Firewall statistics');
         newContent.push('');
-        newContent.push('Services:');
-        newContent.push('  systemctl status <service> - Check service status');
-        newContent.push('  service <service> status   - Alternative service check');
+        newContent.push('Network Diagnostics:');
+        newContent.push('  show route             - Display routing table');
+        newContent.push('  ping <host>            - Test connectivity');
+        newContent.push('  traceroute <host>      - Trace network path');
+        newContent.push('  show config            - Display running configuration');
         newContent.push('');
-        newContent.push('File Operations:');
-        newContent.push('  find <path> -name <pattern> - Find files');
-        newContent.push('  grep <pattern> <file>       - Search in files');
-        newContent.push('  history         - Show command history');
-        newContent.push('  env             - Show environment variables');
-        newContent.push('');
-        newContent.push('Utility:');
-        newContent.push('  clear           - Clear terminal');
-        newContent.push('  cheat, help, ?  - Show this cheat sheet');
-        newContent.push('  exit            - Exit terminal session');
+        newContent.push('Administration:');
+        newContent.push('  show users             - List active administrators');
+        newContent.push('  clear                  - Clear terminal');
+        newContent.push('  cheat, help, ?         - Show this cheat sheet');
+        newContent.push('  exit                   - Exit terminal session');
       } else if (cmd.startsWith('cd ')) {
         const dir = args[1] || '~';
         newContent.push(`Changed directory to ${dir}`);
@@ -663,55 +699,55 @@ export const RemoteSessionTerminal: React.FC<RemoteSessionTerminalProps> = ({
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TerminalIcon />
-            SSH Command Cheat Sheet
+            Firewall Command Cheat Sheet
           </Box>
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <Typography variant="h6" gutterBottom color="primary">
-                Basic Navigation
+                Device Information
               </Typography>
               <Box sx={{ fontFamily: 'monospace', fontSize: '0.875rem', mb: 2 }}>
-                <Typography component="div"><strong>ls, ll</strong> - List files and directories</Typography>
-                <Typography component="div"><strong>pwd</strong> - Show current directory</Typography>
-                <Typography component="div"><strong>cd &lt;dir&gt;</strong> - Change directory</Typography>
-                <Typography component="div"><strong>cat &lt;file&gt;</strong> - Display file content</Typography>
-                <Typography component="div"><strong>tail &lt;file&gt;</strong> - Show end of file</Typography>
+                <Typography component="div"><strong>show version</strong> - Firmware version and uptime</Typography>
+                <Typography component="div"><strong>show interfaces</strong> - Network interface status</Typography>
+                <Typography component="div"><strong>show cpu</strong> - CPU usage statistics</Typography>
+                <Typography component="div"><strong>show ha</strong> - High Availability status</Typography>
+                <Typography component="div"><strong>show config</strong> - Running configuration</Typography>
               </Box>
 
               <Typography variant="h6" gutterBottom color="primary">
-                System Information
+                Security Policies
               </Typography>
               <Box sx={{ fontFamily: 'monospace', fontSize: '0.875rem', mb: 2 }}>
-                <Typography component="div"><strong>whoami</strong> - Show current user</Typography>
-                <Typography component="div"><strong>date</strong> - Show current date/time</Typography>
-                <Typography component="div"><strong>uptime</strong> - Show system uptime</Typography>
-                <Typography component="div"><strong>uname -a</strong> - Show system information</Typography>
-                <Typography component="div"><strong>lscpu</strong> - Show CPU information</Typography>
+                <Typography component="div"><strong>show policy</strong> - Firewall rules</Typography>
+                <Typography component="div"><strong>show nat</strong> - NAT rules and translations</Typography>
+                <Typography component="div"><strong>show vpn</strong> - VPN tunnel status</Typography>
+                <Typography component="div"><strong>show threat-prevention</strong> - IPS/threat status</Typography>
+                <Typography component="div"><strong>show application</strong> - App control status</Typography>
               </Box>
             </Grid>
             <Grid item xs={12} md={6}>
               <Typography variant="h6" gutterBottom color="primary">
-                System Monitoring
+                Traffic Monitoring
               </Typography>
               <Box sx={{ fontFamily: 'monospace', fontSize: '0.875rem', mb: 2 }}>
-                <Typography component="div"><strong>top</strong> - Show running processes</Typography>
-                <Typography component="div"><strong>ps aux</strong> - List all processes</Typography>
-                <Typography component="div"><strong>free -h</strong> - Show memory usage</Typography>
-                <Typography component="div"><strong>df -h</strong> - Show disk usage</Typography>
-                <Typography component="div"><strong>netstat -an</strong> - Show network connections</Typography>
-                <Typography component="div"><strong>ifconfig</strong> - Show network interfaces</Typography>
+                <Typography component="div"><strong>show sessions</strong> - Active connections</Typography>
+                <Typography component="div"><strong>show log</strong> - Security event logs</Typography>
+                <Typography component="div"><strong>show blocked</strong> - Dropped connections</Typography>
+                <Typography component="div"><strong>fw stat</strong> - Firewall statistics</Typography>
+                <Typography component="div"><strong>show users</strong> - Active administrators</Typography>
               </Box>
 
               <Typography variant="h6" gutterBottom color="primary">
-                File Operations
+                Network Diagnostics
               </Typography>
               <Box sx={{ fontFamily: 'monospace', fontSize: '0.875rem', mb: 2 }}>
-                <Typography component="div"><strong>find &lt;path&gt; -name &lt;pattern&gt;</strong> - Find files</Typography>
-                <Typography component="div"><strong>grep &lt;pattern&gt; &lt;file&gt;</strong> - Search in files</Typography>
-                <Typography component="div"><strong>history</strong> - Show command history</Typography>
-                <Typography component="div"><strong>env</strong> - Show environment variables</Typography>
+                <Typography component="div"><strong>show route</strong> - Routing table</Typography>
+                <Typography component="div"><strong>ping &lt;host&gt;</strong> - Test connectivity</Typography>
+                <Typography component="div"><strong>traceroute &lt;host&gt;</strong> - Trace network path</Typography>
+                <Typography component="div"><strong>clear</strong> - Clear terminal</Typography>
+                <Typography component="div"><strong>exit</strong> - Exit session</Typography>
               </Box>
             </Grid>
           </Grid>

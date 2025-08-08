@@ -102,76 +102,121 @@ export const RemoteAccessHub: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock data for devices
+  // Mock data for security devices
   const devices: RemoteDevice[] = [
     {
       id: '1',
-      name: 'WEB-PROD-01',
-      type: 'server',
-      ip: '192.168.1.10',
-      status: 'online',
-      protocols: ['ssh', 'https'],
-      customer: 'TechCorp Industries',
-      lastAccessed: '2 hours ago',
-      os: 'Ubuntu 22.04',
-      critical: true,
-    },
-    {
-      id: '2',
-      name: 'DB-MASTER-01',
-      type: 'server',
-      ip: '192.168.1.20',
-      status: 'online',
-      protocols: ['ssh'],
-      customer: 'TechCorp Industries',
-      lastAccessed: '1 day ago',
-      os: 'CentOS 8',
-      critical: true,
-    },
-    {
-      id: '3',
-      name: 'DESKTOP-ACCT-05',
-      type: 'workstation',
-      ip: '192.168.2.45',
-      status: 'online',
-      protocols: ['rdp', 'vnc'],
-      customer: 'FinanceFlow Corp',
-      lastAccessed: '3 hours ago',
-      os: 'Windows 11',
-    },
-    {
-      id: '4',
-      name: 'FW-EDGE-01',
+      name: 'CP-FW-EDGE-01',
       type: 'firewall',
       ip: '10.0.0.1',
       status: 'online',
       protocols: ['ssh', 'https'],
-      customer: 'SecureNet Solutions',
+      customer: 'TechCorp Industries',
       lastAccessed: '30 minutes ago',
-      os: 'FortiOS 7.2',
+      os: 'Check Point R81.20',
+      critical: true,
+    },
+    {
+      id: '2',
+      name: 'PA-FW-DC-01',
+      type: 'firewall',
+      ip: '10.0.0.2',
+      status: 'online',
+      protocols: ['ssh', 'https'],
+      customer: 'TechCorp Industries',
+      lastAccessed: '1 hour ago',
+      os: 'PAN-OS 11.0',
+      critical: true,
+    },
+    {
+      id: '3',
+      name: 'FORTI-GW-01',
+      type: 'firewall',
+      ip: '172.16.0.1',
+      status: 'online',
+      protocols: ['ssh', 'https'],
+      customer: 'FinanceFlow Corp',
+      lastAccessed: '3 hours ago',
+      os: 'FortiOS 7.4',
+      critical: true,
+    },
+    {
+      id: '4',
+      name: 'ASA-FW-DMZ',
+      type: 'firewall',
+      ip: '10.1.0.1',
+      status: 'online',
+      protocols: ['ssh', 'https'],
+      customer: 'SecureNet Solutions',
+      lastAccessed: '45 minutes ago',
+      os: 'Cisco ASA 9.18',
       critical: true,
     },
     {
       id: '5',
-      name: 'SW-CORE-01',
-      type: 'switch',
-      ip: '10.0.1.1',
-      status: 'maintenance',
+      name: 'WAF-PROD-01',
+      type: 'firewall',
+      ip: '10.2.0.1',
+      status: 'online',
       protocols: ['ssh', 'https'],
       customer: 'DataStream Inc',
-      lastAccessed: '1 week ago',
-      os: 'Cisco IOS',
+      lastAccessed: '2 hours ago',
+      os: 'F5 BIG-IP 17.1',
     },
     {
       id: '6',
-      name: 'APP-SERVER-03',
-      type: 'server',
-      ip: '192.168.3.30',
-      status: 'offline',
-      protocols: ['ssh', 'rdp'],
+      name: 'IPS-CORE-01',
+      type: 'firewall',
+      ip: '10.3.0.1',
+      status: 'online',
+      protocols: ['ssh', 'https'],
       customer: 'CloudFirst Systems',
+      lastAccessed: '1 day ago',
+      os: 'Snort IPS 3.1',
+    },
+    {
+      id: '7',
+      name: 'NGFW-BRANCH-01',
+      type: 'firewall',
+      ip: '192.168.100.1',
+      status: 'online',
+      protocols: ['ssh', 'https'],
+      customer: 'TechCorp Industries',
+      lastAccessed: '4 hours ago',
+      os: 'SonicWall TZ670',
+    },
+    {
+      id: '8',
+      name: 'UTM-SITE-02',
+      type: 'firewall',
+      ip: '172.20.0.1',
+      status: 'maintenance',
+      protocols: ['ssh', 'https'],
+      customer: 'SecureNet Solutions',
+      lastAccessed: '1 week ago',
+      os: 'Sophos XG 19.5',
+    },
+    {
+      id: '9',
+      name: 'SD-WAN-EDGE',
+      type: 'router',
+      ip: '10.4.0.1',
+      status: 'online',
+      protocols: ['ssh', 'https'],
+      customer: 'DataStream Inc',
+      lastAccessed: '6 hours ago',
+      os: 'Cisco Viptela 20.12',
+    },
+    {
+      id: '10',
+      name: 'PROXY-SEC-01',
+      type: 'firewall',
+      ip: '10.5.0.1',
+      status: 'offline',
+      protocols: ['ssh', 'https'],
+      customer: 'FinanceFlow Corp',
       lastAccessed: '2 days ago',
-      os: 'Windows Server 2022',
+      os: 'Zscaler Virtual',
     },
   ];
 
@@ -180,7 +225,7 @@ export const RemoteAccessHub: React.FC = () => {
     {
       id: 's1',
       deviceId: '1',
-      deviceName: 'WEB-PROD-01',
+      deviceName: 'CP-FW-EDGE-01',
       protocol: 'SSH',
       startTime: '10:30 AM',
       duration: '00:45:23',
@@ -190,8 +235,8 @@ export const RemoteAccessHub: React.FC = () => {
     {
       id: 's2',
       deviceId: '3',
-      deviceName: 'DESKTOP-ACCT-05',
-      protocol: 'RDP',
+      deviceName: 'FORTI-GW-01',
+      protocol: 'HTTPS',
       startTime: '11:15 AM',
       duration: '00:12:08',
       recording: true,
@@ -203,7 +248,7 @@ export const RemoteAccessHub: React.FC = () => {
   const sessionHistory: SessionHistory[] = [
     {
       id: 'h1',
-      deviceName: 'DB-MASTER-01',
+      deviceName: 'CP-FW-EDGE-01',
       customer: 'TechCorp Industries',
       technician: 'Sarah Tech',
       startTime: '2025-08-06 14:30',
@@ -215,7 +260,7 @@ export const RemoteAccessHub: React.FC = () => {
     },
     {
       id: 'h2',
-      deviceName: 'FW-EDGE-01',
+      deviceName: 'PA-FW-DC-01',
       customer: 'SecureNet Solutions',
       technician: 'Mike Admin',
       startTime: '2025-08-06 09:00',
@@ -224,6 +269,18 @@ export const RemoteAccessHub: React.FC = () => {
       protocol: 'HTTPS',
       recorded: true,
       actions: 45,
+    },
+    {
+      id: 'h3',
+      deviceName: 'FORTI-GW-01',
+      customer: 'FinanceFlow Corp',
+      technician: 'Alex Security',
+      startTime: '2025-08-05 11:00',
+      endTime: '2025-08-05 12:30',
+      duration: '01:30:00',
+      protocol: 'SSH',
+      recorded: true,
+      actions: 234,
     },
   ];
 
@@ -724,21 +781,11 @@ export const RemoteAccessHub: React.FC = () => {
                 <List>
                   <ListItem button>
                     <ListItemIcon>
-                      <ServerIcon />
+                      <SecurityIcon />
                     </ListItemIcon>
                     <ListItemText
-                      primary="Production Web Server"
-                      secondary="SSH - web-prod-01.techcorp.local:22"
-                    />
-                  </ListItem>
-                  <Divider />
-                  <ListItem button>
-                    <ListItemIcon>
-                      <ComputerIcon />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Accounting Workstation"
-                      secondary="RDP - desktop-acct-05.finance.local:3389"
+                      primary="Check Point Edge Firewall"
+                      secondary="SSH - cp-fw-edge-01.secure.net:22"
                     />
                   </ListItem>
                   <Divider />
@@ -747,8 +794,18 @@ export const RemoteAccessHub: React.FC = () => {
                       <SecurityIcon />
                     </ListItemIcon>
                     <ListItemText
-                      primary="Edge Firewall"
-                      secondary="HTTPS - fw-edge-01.secure.net"
+                      primary="Palo Alto Datacenter FW"
+                      secondary="HTTPS - pa-fw-dc-01.secure.net:443"
+                    />
+                  </ListItem>
+                  <Divider />
+                  <ListItem button>
+                    <ListItemIcon>
+                      <NetworkIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="FortiGate Gateway"
+                      secondary="SSH - forti-gw-01.secure.net:22"
                     />
                   </ListItem>
                 </List>
