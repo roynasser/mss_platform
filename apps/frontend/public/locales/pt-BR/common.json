@@ -153,9 +153,34 @@
     "uptime": "Tempo de Atividade",
     "lastUpdated": "Última Atualização",
     "viewAll": "Ver Todos",
+    "total": "Total",
     "noData": "Nenhum dado disponível",
     "loading": "Carregando...",
     "error": "Erro ao carregar dados do painel"
+  },
+  "severity": {
+    "critical": "Crítica",
+    "high": "Alta",
+    "medium": "Média",
+    "low": "Baixa"
+  },
+  "technicianLevel": {
+    "junior": "Técnico Júnior",
+    "senior": "Técnico Sênior",
+    "expert": "Técnico Especialista"
+  },
+  "executionWindow": {
+    "business_hours": "Horário Comercial",
+    "after_hours": "Após o Expediente",
+    "weekend": "Fim de Semana",
+    "emergency": "Emergência"
+  },
+  "interventionType": {
+    "patch": "Patch",
+    "update": "Atualização",
+    "configuration": "Configuração",
+    "security_fix": "Correção de Segurança",
+    "maintenance": "Manutenção"
   },
   "vulnerabilities": {
     "critical": "Crítica",
@@ -507,6 +532,21 @@
     "maximum": "Máximo",
     "count": "Contagem",
     "percentage": "Porcentagem",
+    "impact": "Impacto",
+    "devices": "Dispositivos",
+    "device": "Dispositivo",
+    "location": "Localização",
+    "time": "Tempo",
+    "saved": "Economizado",
+    "duration": "Duração",
+    "first": "Primeiros",
+    "of": "de",
+    "andMore": "e mais {{count}} {{items}}",
+    "hideDetails": "Ocultar Detalhes",
+    "viewDetails": "Ver Detalhes",
+    "type": "Tipo",
+    "allTypes": "Todos os Tipos",
+    "status": "Status",
     "timeRange": {
       "7d": "Últimos 7 dias",
       "30d": "Últimos 30 dias",
