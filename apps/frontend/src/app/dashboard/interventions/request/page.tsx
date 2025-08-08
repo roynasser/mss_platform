@@ -63,6 +63,9 @@ export default function RequestInterventionPage() {
     expectedDowntime: false,
     contactPerson: user?.email || '',
     additionalNotes: '',
+    requiresEmergencyAccess: false,
+    complianceRelated: false,
+    threatLevel: 'low',
   });
 
   const interventionTypes = [
@@ -330,6 +333,46 @@ export default function RequestInterventionPage() {
               </Grid>
 
               <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={request.requiresEmergencyAccess}
+                      onChange={(e) => setRequest(prev => ({ ...prev, requiresEmergencyAccess: e.target.checked }))}
+                    />
+                  }
+                  label="Requires emergency access protocols"
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={request.complianceRelated}
+                      onChange={(e) => setRequest(prev => ({ ...prev, complianceRelated: e.target.checked }))}
+                    />
+                  }
+                  label="Compliance/audit related intervention"
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Threat Level</InputLabel>
+                  <Select
+                    value={request.threatLevel}
+                    label="Threat Level"
+                    onChange={(e) => setRequest(prev => ({ ...prev, threatLevel: e.target.value }))}
+                  >
+                    <MenuItem value="low">Low</MenuItem>
+                    <MenuItem value="medium">Medium</MenuItem>
+                    <MenuItem value="high">High</MenuItem>
+                    <MenuItem value="critical">Critical</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Contact Person Email"
@@ -417,7 +460,7 @@ export default function RequestInterventionPage() {
                   </Box>
                 )}
 
-                {(request.requiresEmergencyAccess || request.complianceRelated || request.threatLevel !== 'low') && (
+                {(request.requiresEmergencyAccess || request.complianceRelated || (request.threatLevel && request.threatLevel !== 'low')) && (
                   <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
                     <Typography variant="subtitle2" gutterBottom>
                       Special Requirements:
@@ -428,7 +471,7 @@ export default function RequestInterventionPage() {
                     {request.complianceRelated && (
                       <Typography variant="body2">• Compliance/audit related intervention</Typography>
                     )}
-                    {request.threatLevel !== 'low' && (
+                    {request.threatLevel && request.threatLevel !== 'low' && (
                       <Typography variant="body2">• Threat Level: {request.threatLevel.toUpperCase()}</Typography>
                     )}
                   </Box>
