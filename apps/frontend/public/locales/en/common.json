@@ -153,9 +153,34 @@
     "uptime": "Uptime",
     "lastUpdated": "Last Updated",
     "viewAll": "View All",
+    "total": "Total",
     "noData": "No data available",
     "loading": "Loading...",
     "error": "Error loading dashboard data"
+  },
+  "severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "technicianLevel": {
+    "junior": "Junior Technician",
+    "senior": "Senior Technician",
+    "expert": "Expert Technician"
+  },
+  "executionWindow": {
+    "business_hours": "Business Hours",
+    "after_hours": "After Hours",
+    "weekend": "Weekend",
+    "emergency": "Emergency"
+  },
+  "interventionType": {
+    "patch": "Patch",
+    "update": "Update",
+    "configuration": "Configuration",
+    "security_fix": "Security Fix",
+    "maintenance": "Maintenance"
   },
   "vulnerabilities": {
     "critical": "Critical",
@@ -507,6 +532,21 @@
     "maximum": "Maximum",
     "count": "Count",
     "percentage": "Percentage",
+    "impact": "Impact",
+    "devices": "Devices",
+    "device": "Device",
+    "location": "Location",
+    "time": "Time",
+    "saved": "Saved",
+    "duration": "Duration",
+    "first": "First",
+    "of": "of",
+    "andMore": "and {{count}} more {{items}}",
+    "hideDetails": "Hide Details",
+    "viewDetails": "View Details",
+    "type": "Type",
+    "allTypes": "All Types",
+    "status": "Status",
     "timeRange": {
       "7d": "Last 7 days",
       "30d": "Last 30 days",
