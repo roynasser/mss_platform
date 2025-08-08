@@ -223,6 +223,7 @@
     "actioned": "Actioned",
     "completed": "Completed",
     "scheduled": "Scheduled",
+    "in_progress": "In Progress",
     "inProgress": "In Progress",
     "failed": "Failed",
     "cancelled": "Cancelled",

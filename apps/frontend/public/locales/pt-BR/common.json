@@ -223,6 +223,7 @@
     "actioned": "Acionado",
     "completed": "Concluído",
     "scheduled": "Agendado",
+    "in_progress": "Em Andamento",
     "inProgress": "Em Andamento",
     "failed": "Falhado",
     "cancelled": "Cancelado",
